@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;700&display=swap');
+    :root { --bg: #020617; --accent: #22c55e; --panel: #1e293b; --text: #f8fafc; --blue: #38bdf8; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Mukta', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 20px; }
+    .top-bar { display: flex; justify-content: space-between; padding: 15px; background: var(--panel); border-bottom: 2px solid var(--accent); position:sticky; top:0; z-index:100; }
+    .container { padding: 12px; max-width: 500px; margin: auto; }
+    .tab-container { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tab { flex: 1; padding: 12px; text-align: center; background: var(--panel); border-radius: 10px; cursor: pointer; color: #94a3b8; font-weight: bold; }
+    .tab.active { background: var(--accent); color: #000; }
+    .card { background: var(--panel); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+    .row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .col { flex: 1; }
+    label { display: block; font-size: 11px; color: var(--blue); margin-bottom: 3px; text-align: center; font-weight: bold; }
+    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #020617; color: #fff; text-align: center; font-size: 15px; outline:none; }
+    .date-box { text-align: center; padding: 12px; background: rgba(34, 197, 94, 0.1); border: 2px solid var(--accent); border-radius: 12px; margin-bottom: 12px; }
+    .btn-save { width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 12px; font-weight: 800; font-size: 18px; cursor: pointer; color:#000; }
+    
+    #menuOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; }
+    .menu-content { position:absolute; right:15px; top:60px; background:var(--panel); width:230px; border-radius:12px; border:2px solid var(--accent); }
+    .menu-item { padding:14px; border-bottom:1px solid #334155; cursor:pointer; color: white; display: flex; gap: 10px; align-items: center; }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+    .modal-box { background:var(--panel); padding:20px; border-radius:15px; width:100%; max-width:380px; border:2px solid var(--accent); text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h2 style="color:var(--accent)">बिन्ध्यावासिनी यातायात</h2>
+  <div onclick="toggleMenu()" style="cursor:pointer; font-size: 22px; color:var(--accent);"><i class="fas fa-cog"></i></div>
+</div>
+
+<div id="menuOverlay" onclick="toggleMenu()">
+  <div class="menu-content" onclick="event.stopPropagation()">
+    <div class="menu-item" onclick="openManager('busNumber', 'बस सेटिङ')"><i class="fas fa-bus"></i> १. बस सेटिङ</div>
+    <div class="menu-item" onclick="openManager('driverName', 'ड्राइभर सेटिङ')"><i class="fas fa-user"></i> २. ड्राइभर सेटिङ</div>
+    <div class="menu-item" onclick="openManager('instName', 'संस्था सेटिङ')"><i class="fas fa-building"></i> ३. संस्था सेटिङ</div>
+    <div class="menu-item" onclick="openDateTweak()"><i class="fas fa-calendar-alt"></i> ४. गते मिलाउनुस्</div>
+  </div>
+</div>
+
+<div id="managerModal" class="modal">
+  <div class="modal-box">
+    <h3 id="mTitle" style="color:var(--accent)">सेटिङ</h3>
+    <div class="row" style="margin-top:10px;">
+      <input type="text" id="newItemInp" placeholder="विवरण...">
+      <button onclick="addItem()" style="width:50px; background:var(--accent); border:none; border-radius:8px;"><i class="fas fa-plus"></i></button>
+    </div>
+    <div id="itemList" style="max-height: 200px; overflow-y: auto; margin: 10px 0;"></div>
+    <button onclick="closeModal('managerModal')" style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px;">बन्द</button>
+  </div>
+</div>
+
+<div id="dateTweakModal" class="modal">
+  <div class="modal-box">
+    <h3 style="color:var(--accent)">गते मिलाउनुस्</h3>
+    <div style="display:flex; justify-content:center; align-items:center; gap:25px; margin:20px 0;">
+      <button onclick="tweak(-1)" style="font-size:35px; background:none; border:none; color:#ef4444;"><i class="fas fa-minus-circle"></i></button>
+      <span id="offD" style="font-size:35px; font-weight:bold; color:var(--accent);">०</span>
+      <button onclick="tweak(1)" style="font-size:35px; background:none; border:none; color:var(--accent);"><i class="fas fa-plus-circle"></i></button>
+    </div>
+    <button onclick="closeModal('dateTweakModal')" style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px;">बन्द</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tab-container">
+    <div id="tabInst" class="tab active" onclick="setEntryType('Institution')">संस्था</div>
+    <div id="tabRes" class="tab" onclick="setEntryType('Reserve')">रिजर्भ</div>
+  </div>
+
+  <div class="date-box">
+    <div id="bsDisplay" style="font-size: 20px; font-weight: bold; color: var(--accent);">...</div>
+    <div id="adDisplay" style="font-size: 13px; color: #94a3b8;">...</div>
+  </div>
+
+  <form id="busForm">
+    <input type="hidden" id="entryType" name="entryType" value="Institution">
+    <input type="hidden" id="lastKM" name="lastKM" value="0">
+    
+    <div class="card">
+      <div class="row">
+        <div class="col"><label>मिति (AD)</label><input type="date" id="engDate" name="engDate" onchange="calcNepaliDate()"></div>
+        <div class="col" id="instCol"><label>संस्था</label><select id="instName" name="instName"></select></div>
+      </div>
+      <div id="resSection" style="display:none;">
+        <div class="row">
+          <div class="col"><label>कहाँबाट</label><input type="text" name="routeFrom"></div>
+          <div class="col"><label>कहाँसम्म</label><input type="text" name="routeTo"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col"><label>ड्राइभर</label><select id="driverName" name="driverName"></select></div>
+        <div class="col"><label>बस नम्बर</label><select id="busNumber" name="busNumber" onchange="fetchLastKM(this.value)"><option value="">छान्नुहोस्</option></select></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="row">
+        <div class="col"><label>लिटर</label><input type="number" id="dLiter" name="dLiter" oninput="fuelCalc('LIT')" step="any" inputmode="decimal"></div>
+        <div class="col"><label>रेट</label><input type="number" id="dRate" name="dRate" oninput="fuelCalc('RAT')" step="any" inputmode="decimal"></div>
+        <div class="col"><label>डिजल रकम</label><input type="number" id="dAmount" name="dAmount" oninput="fuelCalc('AMT')" step="any" inputmode="decimal"></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>पुरानो KM</label><div id="oldKMDisp" style="padding:10px; background:#020617; border-radius:8px; text-align:center; color:var(--blue)">0</div></div>
+        <div class="col"><label>आजको KM</label><input type="number" id="currentKM" name="currentKM" oninput="calcRunKM()" inputmode="decimal"></div>
+        <div class="col"><label>चलेको KM</label><div id="runKMDisp" style="padding:10px; background:#020617; border-radius:8px; text-align:center; color:var(--accent)">0</div></div>
+      </div>
+    </div>
+
+    <div id="reserveCalc" class="card" style="display:none;">
+      <div class="row">
+        <div class="col"><label>रिजर्भ रकम</label><input type="number" id="totalRes" name="totalReserveAmount" oninput="resCalc()" inputmode="decimal"></div>
+        <div class="col"><label>बैना/खर्च</label><input type="number" id="exp" name="staffAllowance" oninput="resCalc()" inputmode="decimal"></div>
+        <div class="col"><label>बचत</label><input type="number" id="balance" name="balance" readonly style="color:var(--accent)"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="align-items: flex-end;">
+        <div class="col" style="flex: 2.5;"><label>विवरण (एकै लाइन)</label><input type="text" name="remarks" placeholder="विवरण लेख्नुस्..."></div>
+        <div class="col"><label>फोटो</label>
+          <button type="button" id="photoBtn" onclick="document.getElementById('photoFile').click()" style="width:100%; padding:10px; background:#1e293b; border:1px solid var(--accent); border-radius:8px; color:white;"><i class="fas fa-camera"></i></button>
+          <input type="file" id="photoFile" accept="image/*" style="display:none;" onchange="updatePhotoBtn()">
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-save" id="saveBtn" onclick="submitData()">डाटा सेभ गर्नुहोस्</button>
+  </form>
+</div>
+
+<script>
+let offset = parseInt(localStorage.getItem('off')) || 0;
+let currentKey = "";
+const nepDigits = ['०','१','२','३','४','५','६','७','८','९'];
+function toNep(n) { return n.toString().replace(/\d/g, d => nepDigits[d]); }
+
+function toggleMenu() { let m = document.getElementById('menuOverlay'); m.style.display = m.style.display==='block'?'none':'block'; }
+function openManager(key, title) { toggleMenu(); currentKey = key; document.getElementById('mTitle').innerText = title; renderList(); document.getElementById('managerModal').style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function openDateTweak() { toggleMenu(); document.getElementById('offD').innerText = toNep(offset); document.getElementById('dateTweakModal').style.display = 'flex'; }
+function tweak(v) { offset += v; localStorage.setItem('off', offset); document.getElementById('offD').innerText = toNep(offset); calcNepaliDate(); }
+
+function renderList() {
+  let items = JSON.parse(localStorage.getItem(currentKey)) || [];
+  document.getElementById('itemList').innerHTML = items.map((it, i) => `
+    <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #334155;">
+      <span>${it}</span><span onclick="removeItem(${i})" style="color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></span>
+    </div>`).join('') || "<div style='padding:10px;'>डाटा छैन</div>";
+  updateDropdowns();
+}
+
+function addItem() {
+  let v = document.getElementById('newItemInp').value.trim();
+  if(!v) return;
+  let items = JSON.parse(localStorage.getItem(currentKey)) || [];
+  items.push(v); localStorage.setItem(currentKey, JSON.stringify(items));
+  document.getElementById('newItemInp').value = ""; renderList();
+}
+
+function removeItem(i) {
+  let items = JSON.parse(localStorage.getItem(currentKey)) || [];
+  items.splice(i, 1); localStorage.setItem(currentKey, JSON.stringify(items)); renderList();
+}
+
+function updateDropdowns() {
+  ['busNumber', 'driverName', 'instName'].forEach(id => {
+    let items = JSON.parse(localStorage.getItem(id)) || [];
+    let html = id === 'busNumber' ? '<option value="">छान्नुहोस्</option>' : '';
+    document.getElementById(id).innerHTML = html + items.map(it => `<option value="${it}">${it}</option>`).join('');
+  });
+}
+
+function fuelCalc(type) {
+  let lit = parseFloat(document.getElementById('dLiter').value) || 0;
+  let rat = parseFloat(document.getElementById('dRate').value) || 0;
+  let amt = parseFloat(document.getElementById('dAmount').value) || 0;
+
+  if (type === 'LIT' || type === 'RAT') {
+    if (lit > 0 && rat > 0) document.getElementById('dAmount').value = Math.round(lit * rat);
+  } else if (type === 'AMT') {
+    if (amt > 0 && rat > 0) document.getElementById('dLiter').value = (amt / rat).toFixed(2);
+  }
+  resCalc();
+}
+
+function resCalc() {
+  let t = parseFloat(document.getElementById('totalRes').value) || 0;
+  let d = parseFloat(document.getElementById('dAmount').value) || 0;
+  let e = parseFloat(document.getElementById('exp').value) || 0;
+  document.getElementById('balance').value = Math.round(t - (d + e));
+}
+
+function calcRunKM() {
+  let old = parseFloat(document.getElementById('lastKM').value) || 0;
+  let curr = parseFloat(document.getElementById('currentKM').value) || 0;
+  document.getElementById('runKMDisp').innerText = curr > old ? Math.round(curr - old) : 0;
+}
+
+function fetchLastKM(bus) {
+  if(!bus) return;
+  document.getElementById('oldKMDisp').innerText = "...";
+  google.script.run.withSuccessHandler(km => {
+    document.getElementById('lastKM').value = km;
+    document.getElementById('oldKMDisp').innerText = km;
+    calcRunKM();
+  }).getLastKM(bus);
+}
+
+function calcNepaliDate() {
+  let d = new Date(document.getElementById('engDate').value || new Date());
+  let anchorEng = new Date("2026-04-14"); 
+  let diff = Math.floor((d - anchorEng) / 86400000) + offset;
+  window.nepDateRaw = "2083/1/" + (diff + 1);
+  const days = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"];
+  window.nepDay = days[d.getDay()];
+  document.getElementById('bsDisplay').innerText = toNep(2083) + " बैशाख " + toNep(diff+1) + " " + window.nepDay;
+  document.getElementById('adDisplay').innerText = d.toDateString();
+}
+
+function setEntryType(t) {
+  document.getElementById('entryType').value = t;
+  document.getElementById('tabInst').className = t==='Institution'?'tab active':'tab';
+  document.getElementById('tabRes').className = t==='Reserve'?'tab active':'tab';
+  document.getElementById('instCol').style.display = t==='Institution'?'block':'none';
+  document.getElementById('resSection').style.display = t==='Reserve'?'block':'none';
+  document.getElementById('reserveCalc').style.display = t==='Reserve'?'block':'none';
+}
+
+function updatePhotoBtn() {
+  const file = document.getElementById('photoFile').files[0];
+  if(file) document.getElementById('photoBtn').style.background = "#22c55e";
+}
+
+function submitData() {
+  const btn = document.getElementById('saveBtn');
+  if(!document.getElementById('busNumber').value) { Swal.fire("Error", "बस नम्बर छान्नुहोस्", "error"); return; }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> सेभ हुँदै...';
+
+  const data = Object.fromEntries(new FormData(document.getElementById('busForm')).entries());
+  data.nepDateRaw = window.nepDateRaw;
+  data.nepDay = window.nepDay;
+  data.lastKM = document.getElementById('lastKM').value;
+
+  const file = document.getElementById('photoFile').files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      google.script.run.withSuccessHandler(done).process(data, { 
+        base64: e.target.result.split(',')[1], 
+        mimeType: file.type, 
+        fileName: file.name 
+      });
+    };
+    reader.readAsDataURL(file);
+  } else {
+    google.script.run.withSuccessHandler(done).process(data, null);
+  }
+}
+
+function done(res) {
+  if(res === "SUCCESS") {
+    Swal.fire({ title: 'सफल भयो!', text: 'डाटा सेभ भयो है!', icon: 'success', timer: 1500, showConfirmButton: false });
+    setTimeout(() => { location.reload(); }, 1500);
+  } else {
+    Swal.fire("Error", res, "error");
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('saveBtn').innerText = "डाटा सेभ गर्नुहोस्";
+  }
+}
+
+window.onload = () => {
+  document.getElementById('engDate').value = new Date().toISOString().split('T')[0];
+  calcNepaliDate(); updateDropdowns();
+};
+</script>
+</body>
+</html>
