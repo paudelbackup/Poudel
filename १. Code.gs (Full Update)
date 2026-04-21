@@ -1,0 +1,132 @@
+const FOLDER_ID = "1pgnhX7iHuxAMiWviDe5m0Q2B0VoxQ8oe"; 
+
+function doGet() {
+  return HtmlService.createTemplateFromFile('index')
+      .evaluate()
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function toNepNum(n) {
+  const nepDigits = ['०','१','२','३','४','५','६','७','८','९'];
+  return n.toString().replace(/\d/g, d => nepDigits[d]);
+}
+
+function getLastKM(busNumber, currentMonthName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const months = ["बैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"];
+  let currentIndex = months.indexOf(currentMonthName);
+  for (let i = currentIndex; i >= 0; i--) {
+    let sheetName = "२०८३ " + months[i];
+    let sheet = ss.getSheetByName(sheetName);
+    let lastKM = searchKMInSheet(sheet, busNumber);
+    if (lastKM !== null) return lastKM;
+  }
+  return 0;
+}
+
+function searchKMInSheet(sheet, busNumber) {
+  if (!sheet) return null;
+  const data = sheet.getDataRange().getValues();
+  for (let j = data.length - 1; j >= 1; j--) {
+    if (data[j][5] && data[j][5].toString().trim() === busNumber.toString().trim()) { 
+      let val = parseFloat(data[j][10]); 
+      if (!isNaN(val) && val > 0) return val;
+    }
+  }
+  return null;
+}
+
+function process(data, photoObj) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetName = "२०८३ " + data.nepMonthName;
+    let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+    
+    if (sheet.getLastRow() === 0) {
+      const headers = ["मिति (BS)", "बार", "मिति (AD)", "प्रकार", "संस्था/रुट", "बस नं", "ड्राइभर", "लिटर", "रेट", "डिजल रकम", "आजको KM", "चलेको KM", "रिजर्भ रकम", "बैना/खर्च", "बचत", "कुल डिजल लिटर", "कुल डिजल रकम", "कुल रिजर्भ बचत", "विवरण", "फोटो"];
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, 20)
+           .setFontWeight("bold")
+           .setBackground("#22c55e")
+           .setFontColor("white")
+           .setHorizontalAlignment("center")
+           .setVerticalAlignment("middle")
+           .setWrap(false); // हेडरलाई सिधा राख्ने
+      sheet.setFrozenRows(1);
+    }
+
+    let photoLink = "फोटो छैन";
+    if (photoObj && photoObj.base64) {
+      const folder = DriveApp.getFolderById(FOLDER_ID);
+      const blob = Utilities.newBlob(Utilities.base64Decode(photoObj.base64), photoObj.mimeType, photoObj.fileName);
+      photoLink = '=HYPERLINK("' + folder.createFile(blob).getUrl() + '", "फोटो हेर्नुहोस्")';
+    }
+
+    const nepType = data.entryType === "Institution" ? "संस्था" : "रिजर्भ";
+    const instName = data.entryType === "Institution" ? data.instName : (data.routeFrom + " - " + data.routeTo);
+
+    let runningDieselLiter = (parseFloat(data.dLiter) || 0);
+    let runningDieselAmount = (parseFloat(data.dAmount) || 0);
+    let runningReserveBalance = (data.entryType === "Reserve") ? (parseFloat(data.balance) || 0) : 0;
+    
+    const currentSheetData = sheet.getDataRange().getValues();
+    if (currentSheetData.length > 1) {
+      for(let r = 1; r < currentSheetData.length; r++) {
+        const rowType = currentSheetData[r][3] ? currentSheetData[r][3].toString().trim() : ""; 
+        const rowInstName = currentSheetData[r][4] ? currentSheetData[r][4].toString().trim() : "";
+        const rowLiter = parseFloat(currentSheetData[r][7]) || 0;
+        const rowAmount = parseFloat(currentSheetData[r][9]) || 0;
+        const rowBal = parseFloat(currentSheetData[r][14]) || 0;
+        if (data.entryType === "Institution") {
+          if (rowType === "संस्था" && rowInstName === data.instName) {
+            runningDieselLiter += rowLiter;
+            runningDieselAmount += rowAmount;
+          }
+        } else if (rowType === "रिजर्भ") {
+          runningDieselLiter += rowLiter;
+          runningDieselAmount += rowAmount;
+        }
+        if (rowType === "रिजर्भ") runningReserveBalance += rowBal;
+      }
+    }
+
+    const lastKMValue = parseFloat(data.lastKM) || 0;
+    const todayKM = parseFloat(data.currentKM) || 0;
+    const drivenKM = (todayKM > lastKMValue && lastKMValue > 0) ? (todayKM - lastKMValue) : 0;
+
+    const rowData = [
+      toNepNum(data.nepDateRaw), data.nepDay, data.engDate, nepType, instName, data.busNumber, data.driverName,
+      data.dLiter || 0, data.dRate || 0, data.dAmount || 0, todayKM, drivenKM,
+      data.totalReserveAmount || 0, data.staffAllowance || 0, data.balance || 0,
+      runningDieselLiter.toFixed(2), Math.round(runningDieselAmount),
+      (data.entryType === "Reserve" ? Math.round(runningReserveBalance) : ""), 
+      data.remarks || "", photoLink
+    ];
+
+    sheet.appendRow(rowData);
+    
+    const lastRow = sheet.getLastRow();
+    const rowRange = sheet.getRange(lastRow, 1, 1, 20);
+    
+    // तपाईँले खोज्नुभएको मुख्य सेटिङ:
+    rowRange.setHorizontalAlignment("center")
+            .setVerticalAlignment("middle")
+            .setWrap(false) // कतै पनि तल माथि आउँदैन, सिधा बस्छ
+            .setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
+    
+    sheet.autoResizeColumns(1, 20); // डाटा अनुसार कोलम फैलाउने
+    
+    // अलि अलि खाली ठाउँ (Padding) को लागि कोलम अझै थोरै बढाउने
+    for (let c = 1; c <= 20; c++) {
+      let currentWidth = sheet.getColumnWidth(c);
+      sheet.setColumnWidth(c, currentWidth + 20); 
+    }
+    
+    if(lastRow > 2) { 
+      sheet.getRange(2, 1, lastRow - 1, 20).sort({column: 1, ascending: true}); 
+    }
+    
+    return "SUCCESS";
+  } catch (e) { return "Error: " + e.toString(); }
+}
