@@ -8,7 +8,7 @@ function doGet() {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// --- सेटिङ व्यवस्थापन ---
+// --- सेटिङ व्यवस्थापन (नचलाइएको) ---
 function getSettings() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName("Settings");
@@ -84,7 +84,7 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
-// --- मुख्य डेटा प्रशोधन फङ्सन ---
+// --- मुख्य डेटा प्रशोधन (Alignment र Resize सुधारिएको) ---
 function process(data, photoObj) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000); 
@@ -96,16 +96,13 @@ function process(data, photoObj) {
     
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#22c55e").setFontColor("white").setHorizontalAlignment("center");
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#22c55e").setFontColor("white").setHorizontalAlignment("center").setVerticalAlignment("middle");
       sheet.setFrozenRows(1);
     }
 
     const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
-    
-    // नयाँ UNIQUE KEY: मिति + संस्था/रुट + बस नम्बर
     const currentKey = (data.nepDateRaw + "|" + instOrRoute + "|" + data.busNumber).toString().trim();
     
-    // संस्था (Institution) को लागि मात्र डुप्लिकेट चेक गर्ने
     if (data.entryType === "Institution") {
       const lastRow = sheet.getLastRow();
       if (lastRow > 1) {
@@ -143,12 +140,10 @@ function process(data, photoObj) {
       }
     }
 
-    // डाटा तयार गर्ने (रिजर्भको लागि KEY मा UUID राख्ने ताकि डुप्लिकेट नभनून्)
     const rowData = [
       toNepNum(data.nepDateRaw), data.nepDay, data.engDate, 
       (data.entryType === "Institution" ? "संस्था" : "रिजर्भ"),
-      instOrRoute,
-      data.busNumber, data.driverName,
+      instOrRoute, data.busNumber, data.driverName,
       data.dLiter || 0, data.dRate || 0, data.dAmount || 0,
       todayKMInput, drivenKM,
       data.totalReserveAmount || 0, data.staffAllowance || 0, data.balance || 0,
@@ -159,23 +154,18 @@ function process(data, photoObj) {
 
     sheet.appendRow(rowData);
     
-    // हालै थपिएको रोको फर्म्याटिङ
-    const newRowIdx = sheet.getLastRow();
-    const newRowRange = sheet.getRange(newRowIdx, 1, 1, 21);
-    newRowRange.setVerticalAlignment("middle").setHorizontalAlignment("center");
+    // --- एलाइनमेन्ट र साइज मिलाउने ---
+    const lastRow = sheet.getLastRow();
+    const range = sheet.getRange(lastRow, 1, 1, 21);
+    range.setHorizontalAlignment("center").setVerticalAlignment("middle");
     
-    // रिजर्भ भएको खण्डमा टेक्स्ट रातो र बोल्ड गर्ने
     if (data.entryType === "Reserve") {
-      newRowRange.setFontColor("#ff0000").setFontWeight("bold");
-    } else {
-      newRowRange.setFontColor("#000000").setFontWeight("normal");
+      range.setFontColor("#ff0000").setFontWeight("bold");
     }
 
-    // कोलम अटो-साइज (अलि बढी प्याडिङ सहित)
     sheet.autoResizeColumns(1, 21);
     for (let col = 1; col <= 21; col++) {
-      let currentWidth = sheet.getColumnWidth(col);
-      sheet.setColumnWidth(col, currentWidth + 35); 
+      sheet.setColumnWidth(col, sheet.getColumnWidth(col) + 35); 
     }
 
     return "SUCCESS";
