@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&display=swap');
+    :root { --bg: #0f172a; --theme: #ffb400; --card: #1e293b; --text: #f8fafc; --input: #0f172a; --danger: #ef4444; --success: #22c55e; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Mukta', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 5px; }
+
+    .app { width: 100%; border: 2.5px solid var(--theme); border-radius: 15px; padding: 12px; background: rgba(30,41,59,0.98); min-height: 98vh; display: flex; flex-direction: column; gap: 8px; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px; border-bottom: 1px solid #334155; }
+    .logo-area { display: flex; align-items: center; gap: 8px; color: var(--theme); font-weight: 800; font-size: 20px; }
+    
+    .date-box { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 10px; text-align: center; border-bottom: 3px solid var(--theme); cursor: pointer; }
+    .nep-date { font-size: 20px; font-weight: 800; color: var(--theme); }
+
+    .loan-dash { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: #000; padding: 5px; border-radius: 8px; border: 1px solid var(--theme); margin-top: 5px; }
+    .dash-box { text-align: center; padding: 3px; }
+    .dash-box span { font-size: 10px; color: #94a3b8; display: block; }
+    .dash-box b { font-size: 12px; color: #fff; }
+
+    .red-bar { background: var(--danger); color: white; text-align: center; padding: 8px; border-radius: 8px; font-weight: 800; font-size: 18px; border: 1.5px solid #fff; margin: 5px 0; }
+
+    label { font-size: 12px; color: #94a3b8; margin-left: 5px; }
+    input, select { width: 100%; background: var(--input); border: 1.5px solid #334155; border-radius: 8px; padding: 10px; color: #fff; font-size: 16px; outline: none; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .action-row { display: grid; grid-template-columns: 1fr 70px; gap: 8px; align-items: end; margin-top: 5px; }
+    .cam-box { background: var(--input); border: 1.5px solid #334155; border-radius: 8px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+    #preview { position: absolute; width: 100%; height: 100%; border-radius: 6px; object-fit: cover; display: none; }
+
+    .btn-save { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 800; margin-top: auto; }
+    
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; padding:15px; overflow-y: auto; }
+    .modal-content { background: var(--card); border-radius: 15px; border: 2px solid var(--theme); padding: 15px; position: relative; top: 5%; }
+    
+    .menu-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--theme); }
+    .close-btn { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: 800; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="logo-area"><i class="fas fa-bus"></i> <span>बस व्यवस्थापन</span></div>
+    <i class="fas fa-bars" style="color:var(--theme); font-size: 24px;" onclick="openMenu()"></i>
+  </div>
+
+  <div class="date-box" onclick="sub('date')">
+    <div id="dispNep" class="nep-date">---</div>
+    <div id="dispEng" style="font-size: 11px; color: #94a3b8;">---</div>
+  </div>
+
+  <div id="lDash" style="display:none;">
+    <div class="loan-dash">
+      <div class="dash-box"><span>पुरानो मिति</span><b id="oDate">-</b></div>
+      <div class="dash-box"><span>पुरानो बाँकी</span><b id="oTot">०</b></div>
+      <div class="dash-box"><span>पुरानो सावाँ</span><b id="oSaw">०</b></div>
+    </div>
+    <div class="loan-dash" style="margin-top:4px;">
+      <div class="dash-box"><span>ब्याज %</span><b id="oRate">०</b></div>
+      <div class="dash-box"><span>आजको ब्याज</span><b id="tByaj" style="color:var(--success);">०</b></div>
+      <div class="dash-box"><span>कुल बाँकी</span><b id="gTot" style="color:var(--danger);">०</b></div>
+    </div>
+  </div>
+
+  <div class="red-bar">कुल बाँकी: रु. <span id="hBal">०</span></div>
+
+  <form id="f">
+    <div class="grid-2">
+      <div class="group"><label>विवरण प्रकार</label>
+        <select id="cat" onchange="ui()">
+          <option value="संस्था">🏢 संस्था</option>
+          <option value="ऋण">💰 ऋण</option>
+          <option value="मर्मत">🛠️ मर्मत</option>
+          <option value="कर्मचारी">👨‍✈️ कर्मचारी</option>
+          <option value="व्यक्तिगत">👤 व्यक्तिगत</option>
+        </select>
+      </div>
+      <div class="group"><label>अङ्ग्रेजी मिति (AD)</label><input type="text" id="eD" readonly></div>
+    </div>
+
+    <div class="group" style="margin-top:5px;"><label>नाम छान्नुहोस्</label><select id="tN" onchange="sum()"></select></div>
+
+    <div id="loanUI" style="display:none; border:1px solid #444; padding:8px; border-radius:8px; margin-top:5px; background: rgba(0,0,0,0.1);">
+      <div class="grid-2">
+        <div class="group"><label>किस्ता (-) </label><input type="number" id="k" oninput="calc()" value="0"></div>
+        <div class="group"><label>ब्याज दर %</label><input type="number" id="r" oninput="calc()" value="12"></div>
+      </div>
+      <div class="grid-2" style="margin-top:5px;">
+        <div class="group"><label>थप सावाँ (+) </label><input type="number" id="aS" oninput="calc()" value="0"></div>
+        <div class="group"><label>सावाँ फिर्ता (-)</label><input type="number" id="pS" oninput="calc()" value="0"></div>
+      </div>
+    </div>
+
+    <div id="billUI" class="grid-2" style="margin-top:5px;">
+      <div class="group"><label>बिल रकम (+)</label><input type="number" id="bA" value="0" oninput="calc()"></div>
+      <div class="group"><label>तिरेको रकम (-)</label><input type="number" id="pA" value="0" oninput="calc()"></div>
+    </div>
+
+    <div class="action-row">
+      <div class="group"><label>कैफियत</label><input type="text" id="remk" placeholder="कैफियत लेख्नुहोस्..." style="height:50px;"></div>
+      <div class="group">
+        <label>फोटो</label>
+        <label for="imgInp" class="cam-box"><i class="fas fa-camera" style="color:var(--theme); font-size:24px;"></i><img id="preview"></label>
+        <input type="file" id="imgInp" accept="image/*" style="display:none" onchange="previewImg(this)">
+      </div>
+    </div>
+
+    <button type="button" class="btn-save" onclick="save()">डाटा सुरक्षित गर्नुहोस्</button>
+  </form>
+</div>
+
+<div id="mMenu" class="modal">
+  <div class="modal-content">
+    <h3 style="text-align:center; color:var(--theme); margin-bottom:15px;">सेटिङ मेनु</h3>
+    <div class="menu-item" onclick="sub('inst')"><span><i class="fas fa-university" style="color:#38bdf8"></i> संस्था सेटिङ</span> <i class="fas fa-plus"></i></div>
+    <div class="menu-item" onclick="sub('loan')"><span><i class="fas fa-coins" style="color:#fbbf24"></i> ऋण सेटिङ</span> <i class="fas fa-plus"></i></div>
+    <div class="menu-item" onclick="sub('repair')"><span><i class="fas fa-tools" style="color:#f87171"></i> मर्मत सेटिङ</span> <i class="fas fa-plus"></i></div>
+    <div class="menu-item" onclick="sub('staff')"><span><i class="fas fa-user-tie" style="color:#4ade80"></i> कर्मचारी सेटिङ</span> <i class="fas fa-plus"></i></div>
+    <div class="menu-item" onclick="sub('pers')"><span><i class="fas fa-user" style="color:#c084fc"></i> व्यक्तिगत सेटिङ</span> <i class="fas fa-plus"></i></div>
+    <div class="menu-item" onclick="sub('date')"><span><i class="fas fa-calendar-alt" style="color:#f472b6"></i> गते मिलाउनुहोस्</span> <i class="fas fa-plus"></i></div>
+    <button onclick="document.getElementById('mMenu').style.display='none'" class="close-btn">बन्द गर्नुहोस्</button>
+  </div>
+</div>
+
+<div id="sSet" class="modal">
+  <div class="modal-content">
+    <h3 id="sT" style="text-align:center; color:var(--theme);"></h3>
+    <div id="dateUI" style="display:none; text-align:center; padding: 20px 0;">
+       <div style="display:flex; justify-content:center; align-items:center; gap:20px;">
+         <button onclick="off(-1)" style="width:50px; height:50px; border-radius:50%; border:none; background:var(--danger); color:white; font-size:20px;"><i class="fas fa-minus"></i></button>
+         <span id="offVal" style="font-size:30px; font-weight:800; color:var(--success);">०</span>
+         <button onclick="off(1)" style="width:50px; height:50px; border-radius:50%; border:none; background:var(--success); color:white; font-size:20px;"><i class="fas fa-plus"></i></button>
+       </div>
+    </div>
+    <div id="itemUI">
+      <div style="display:flex; gap:5px; margin:15px 0;">
+        <input type="text" id="nI" placeholder="नयाँ नाम..." style="flex:1;">
+        <button onclick="add()" style="width:50px; background:var(--theme); border:none; border-radius:8px;"><i class="fas fa-plus"></i></button>
+      </div>
+      <div id="iL" style="max-height:200px; overflow-y:auto;"></div>
+    </div>
+    <button onclick="location.reload()" class="close-btn">बन्द गर्नुहोस्</button>
+  </div>
+</div>
+
+<script>
+  let cfg = { dateOff: 0 }, curB = 0, oldS = 0, imageBase64 = "", curT = '';
+  const nD = ['०','१','२','३','४','५','६','७','८','९'];
+
+  function toN(n) { return n.toString().split('').map(d => nD[d] || d).join(''); }
+  function openMenu() { document.getElementById('mMenu').style.display='block'; }
+  function previewImg(i) {
+    if (i.files && i.files[0]) {
+      let r = new FileReader();
+      r.onload = e => { imageBase64 = e.target.result; document.getElementById('preview').src = e.target.result; document.getElementById('preview').style.display = 'block'; };
+      r.readAsDataURL(i.files[0]);
+    }
+  }
+
+  function updateDate() {
+    let d = new Date();
+    document.getElementById('eD').value = d.toLocaleDateString('en-GB');
+    document.getElementById('dispEng').innerText = d.toDateString();
+    let gate = 11 + (parseInt(cfg.dateOff) || 0);
+    let bar = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"][d.getDay()];
+    document.getElementById('dispNep').innerText = "२०८३ बैशाख " + toN(gate) + " " + bar;
+  }
+
+  function sub(t) {
+    curT = t; document.getElementById('mMenu').style.display='none'; document.getElementById('sSet').style.display='block';
+    document.getElementById('sT').innerText = t.toUpperCase() + " सेटिङ";
+    if(t==='date'){ document.getElementById('dateUI').style.display='block'; document.getElementById('itemUI').style.display='none'; document.getElementById('offVal').innerText = toN(cfg.dateOff || 0); }
+    else { document.getElementById('dateUI').style.display='none'; document.getElementById('itemUI').style.display='block'; list(); }
+  }
+
+  function off(v) { cfg.dateOff = (parseInt(cfg.dateOff) || 0) + v; document.getElementById('offVal').innerText = toN(cfg.dateOff); google.script.run.updateSettings('dateOff', cfg.dateOff); updateDate(); }
+  function list() { let items = cfg[curT] ? cfg[curT].split(',') : []; document.getElementById('iL').innerHTML = items.filter(x=>x).map((x,i) => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #334155;"><span>${x}</span><i class="fas fa-trash" style="color:var(--danger)" onclick="rem(${i})"></i></div>`).join(''); }
+  function add() { let v = document.getElementById('nI').value.trim(); if(!v) return; let items = cfg[curT] ? cfg[curT].split(',') : []; items.push(v); cfg[curT] = items.join(','); document.getElementById('nI').value = ''; google.script.run.updateSettings(curT, cfg[curT]); list(); }
+  function rem(i) { let items = cfg[curT].split(','); items.splice(i,1); cfg[curT] = items.join(','); google.script.run.updateSettings(curT, cfg[curT]); list(); }
+
+  function ui() {
+    const c = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
+    document.getElementById('lDash').style.display = (c==='ऋण'?'block':'none');
+    document.getElementById('loanUI').style.display = (c==='ऋण'?'block':'none');
+    document.getElementById('billUI').style.display = (c==='ऋण'?'none':'grid');
+    let l = (c==="संस्था")?cfg.inst:(c==="ऋण")?cfg.loan:(c==="मर्मत")?cfg.repair:(c==="कर्मचारी")?cfg.staff:cfg.pers;
+    document.getElementById('tN').innerHTML = l ? l.split(',').map(x=>`<option value="${x}">${x}</option>`).join('') : '<option>नाम थप्नुहोस्</option>';
+    sum();
+  }
+
+  function sum() {
+    const name = document.getElementById('tN').value;
+    const cat = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
+    if(!name || name.includes("नाम")) return;
+    google.script.run.withSuccessHandler(r => {
+      document.getElementById('oDate').innerText = r.oldDate || "-";
+      document.getElementById('oTot').innerText = toN(r.total || 0);
+      document.getElementById('oSaw').innerText = toN(r.oldSawa || 0);
+      curB = r.total || 0; oldS = r.oldSawa || 0; calc();
+    }).getSummary(name, cat);
+  }
+
+  function calc() {
+    const c = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
+    if(c === 'ऋण') {
+        let rate = parseFloat(document.getElementById('r').value)||0;
+        let byaj = Math.round(oldS * (rate/100)/12);
+        let kista = parseFloat(document.getElementById('k').value)||0;
+        let adds = parseFloat(document.getElementById('aS').value)||0;
+        let paids = parseFloat(document.getElementById('pS').value)||0;
+        document.getElementById('tByaj').innerText = toN(byaj);
+        document.getElementById('oRate').innerText = toN(rate);
+        let f = curB + byaj + adds - (kista + paids);
+        document.getElementById('gTot').innerText = toN(f);
+        document.getElementById('hBal').innerText = toN(f);
+    } else {
+        let b = parseFloat(document.getElementById('bA').value)||0;
+        let p = parseFloat(document.getElementById('pA').value)||0;
+        document.getElementById('hBal').innerText = toN(curB + b - p);
+    }
+  }
+
+  function save() {
+    const name = document.getElementById('tN').value;
+    if(!name || name.includes("नाम")) return alert("नाम छान्नुहोस्!");
+    const d = {
+      nepDate: document.getElementById('dispNep').innerText,
+      category: document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, ''),
+      targetName: name,
+      sawaAmt: parseFloat(document.getElementById('aS').value)||0,
+      byajAmt: document.getElementById('cat').value.includes('ऋण') ? parseFloat(document.getElementById('tByaj').innerText.replace(/[०-९]/g, d=>nD.indexOf(d))) : 0,
+      totalAmt: parseFloat(document.getElementById('hBal').innerText.replace(/[०-९]/g, d=>nD.indexOf(d)))||0,
+      remarks: document.getElementById('remk').value,
+      imageBlob: imageBase64
+    };
+    google.script.run.withSuccessHandler(m => { alert(m); location.reload(); }).processEntry(d);
+  }
+
+  window.onload = () => { updateDate(); google.script.run.withSuccessHandler(c => { cfg = c; ui(); }).getSettings(); };
+</script>
+</body>
+</html>
