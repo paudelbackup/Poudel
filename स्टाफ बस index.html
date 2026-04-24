@@ -140,7 +140,7 @@
 let offset = parseInt(localStorage.getItem('off')) || 0;
 let currentKey = "";
 const nepDigits = ['०','१','२','३','४','५','६','७','८','९'];
-function toNep(n) { return n.toString().replace(/\d/g, d => nepDigits[d]); }
+function toNep(n) { return n ? n.toString().replace(/\d/g, d => nepDigits[d]) : "०"; }
 
 function toggleMenu() { let m = document.getElementById('menuOverlay'); m.style.display = m.style.display==='block'?'none':'block'; }
 
@@ -162,40 +162,37 @@ function renderList() {
     <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #334155;">
       <span>${it}</span><span onclick="removeItem(${i})" style="color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></span>
     </div>`).join('') || "<div style='padding:10px;'>डाटा छैन</div>";
-  updateDropdowns();
 }
 
 function addItem() {
   let v = document.getElementById('newItemInp').value.trim();
   if(!v) return;
-  
-  // Sheet मा सेभ गर्ने
   google.script.run.withSuccessHandler(() => {
     let items = JSON.parse(localStorage.getItem(currentKey)) || [];
     items.push(v);
     localStorage.setItem(currentKey, JSON.stringify(items));
     document.getElementById('newItemInp').value = "";
     renderList();
+    updateDropdowns();
   }).saveSettingToSheet(currentKey, v);
 }
 
 function removeItem(i) {
   let items = JSON.parse(localStorage.getItem(currentKey)) || [];
   let val = items[i];
-  
-  // Sheet बाट हटाउने
   google.script.run.removeSettingFromSheet(currentKey, val);
-  
   items.splice(i, 1);
   localStorage.setItem(currentKey, JSON.stringify(items));
   renderList();
+  updateDropdowns();
 }
 
 function updateDropdowns() {
   ['busNumber', 'driverName', 'instName'].forEach(id => {
     let items = JSON.parse(localStorage.getItem(id)) || [];
-    let html = id === 'busNumber' ? '<option value="">छान्नुहोस्</option>' : '';
-    document.getElementById(id).innerHTML = html + items.map(it => `<option value="${it}">${it}</option>`).join('');
+    let selectEl = document.getElementById(id);
+    let html = id === 'busNumber' ? '<option value="">छान्नुहोस्</option>' : '<option value="">--छान्नुहोस्--</option>';
+    selectEl.innerHTML = html + items.map(it => `<option value="${it}">${it}</option>`).join('');
   });
 }
 
@@ -226,37 +223,25 @@ function calcRunKM() {
 }
 
 function fetchLastKM(bus) {
-  if(!bus) {
-    document.getElementById('oldKMDisp').innerText = "०";
-    document.getElementById('lastKM').value = 0;
-    return;
-  }
+  if(!bus) { document.getElementById('oldKMDisp').innerText = "०"; document.getElementById('lastKM').value = 0; return; }
   document.getElementById('oldKMDisp').innerText = "...";
-  const currentMonth = window.nepMonthName; 
   google.script.run.withSuccessHandler(km => {
     document.getElementById('lastKM').value = km;
     document.getElementById('oldKMDisp').innerText = toNep(km);
     calcRunKM();
-  }).getLastKM(bus, currentMonth);
+  }).getLastKM(bus, window.nepMonthName);
 }
 
 function calcNepaliDate() {
   let d = new Date(document.getElementById('engDate').value || new Date());
   let anchorEng = new Date("2026-04-14"); 
   let totalDays = Math.floor((d - anchorEng) / 86400000) + offset;
-  
-  let year = 2083;
-  let month = 1;
-  let day = totalDays + 1;
-  
+  let year = 2083; let month = 1; let day = totalDays + 1;
   if (day > 31) { month = 2; day = day - 31; }
-  
   window.nepMonthName = ["बैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"][month-1];
   window.nepDateRaw = year + "/" + (month < 10 ? '0'+month : month) + "/" + (day < 10 ? '0'+day : day);
-  
   const days = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"];
   window.nepDay = days[d.getDay()];
-  
   document.getElementById('bsDisplay').innerText = toNep(year) + " " + window.nepMonthName + " " + toNep(day < 10 ? '0'+day : day) + " " + window.nepDay;
   document.getElementById('adDisplay').innerText = d.toDateString();
 }
@@ -278,15 +263,12 @@ function updatePhotoBtn() {
 function submitData() {
   const btn = document.getElementById('saveBtn');
   if(!document.getElementById('busNumber').value) { Swal.fire("Error", "बस नम्बर छान्नुहोस्", "error"); return; }
-  
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> सेभ हुँदै...';
-
   const data = Object.fromEntries(new FormData(document.getElementById('busForm')).entries());
   data.nepDateRaw = window.nepDateRaw;
   data.nepDay = window.nepDay;
   data.nepMonthName = window.nepMonthName;
-
   const file = document.getElementById('photoFile').files[0];
   if (file) {
     const reader = new FileReader();
@@ -313,29 +295,21 @@ function done(res) {
     document.getElementById('runKMDisp').innerText = "०";
     document.getElementById('photoBtn').style.background = "#1e293b";
     calcNepaliDate(); 
-    document.getElementById('saveBtn').disabled = false;
-    document.getElementById('saveBtn').innerText = "डाटा सेभ गर्नुहोस्";
-  } else if (res.startsWith("ERROR_DUPLICATE")) {
-    Swal.fire("एन्ट्री भइसकेको छ", res.split(": ")[1], "warning");
-    document.getElementById('saveBtn').disabled = false;
-    document.getElementById('saveBtn').innerText = "डाटा सेभ गर्नुहोस्";
-  } else {
-    Swal.fire("Error", res, "error");
-    document.getElementById('saveBtn').disabled = false;
-    document.getElementById('saveBtn').innerText = "डाटा सेभ गर्नुहोस्";
-  }
+  } else { Swal.fire("सूचना", res, "warning"); }
+  document.getElementById('saveBtn').disabled = false;
+  document.getElementById('saveBtn').innerText = "डाटा सेभ गर्नुहोस्";
 }
 
 window.onload = () => {
   document.getElementById('engDate').value = new Date().toISOString().split('T')[0];
   calcNepaliDate(); 
-  
-  // सिटबाट सेटिङहरू लोड गर्ने
   google.script.run.withSuccessHandler(settings => {
-    localStorage.setItem('busNumber', JSON.stringify(settings.busNumber));
-    localStorage.setItem('driverName', JSON.stringify(settings.driverName));
-    localStorage.setItem('instName', JSON.stringify(settings.instName));
-    updateDropdowns();
+    if(settings) {
+      localStorage.setItem('busNumber', JSON.stringify(settings.busNumber || []));
+      localStorage.setItem('driverName', JSON.stringify(settings.driverName || []));
+      localStorage.setItem('instName', JSON.stringify(settings.instName || []));
+      updateDropdowns();
+    }
   }).getSettings();
 };
 </script>
