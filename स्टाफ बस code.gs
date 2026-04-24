@@ -84,7 +84,7 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
-// --- डाटा प्रशोधन र अटो-साइज लजिक ---
+// --- मुख्य डेटा प्रशोधन फङ्सन ---
 function process(data, photoObj) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000); 
@@ -100,15 +100,19 @@ function process(data, photoObj) {
       sheet.setFrozenRows(1);
     }
 
-    // --- नयाँ UNIQUE KEY लजिक (मिति + संस्था + बस नम्बर) ---
     const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
+    
+    // नयाँ UNIQUE KEY: मिति + संस्था/रुट + बस नम्बर
     const currentKey = (data.nepDateRaw + "|" + instOrRoute + "|" + data.busNumber).toString().trim();
     
-    const lastRow = sheet.getLastRow();
-    if (lastRow > 1) {
-      const keyData = sheet.getRange(2, 21, lastRow - 1, 1).getValues().flat();
-      if (keyData.includes(currentKey)) {
-        return "ERROR_DUPLICATE: यो बसको लागि यो संस्थामा आजको इन्ट्री भइसकेको छ!";
+    // संस्था (Institution) को लागि मात्र डुप्लिकेट चेक गर्ने
+    if (data.entryType === "Institution") {
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        const keyData = sheet.getRange(2, 21, lastRow - 1, 1).getValues().flat();
+        if (keyData.includes(currentKey)) {
+          return "ERROR_DUPLICATE: यो बसको लागि यो संस्थामा आजको इन्ट्री भइसकेको छ!";
+        }
       }
     }
 
@@ -139,6 +143,7 @@ function process(data, photoObj) {
       }
     }
 
+    // डाटा तयार गर्ने (रिजर्भको लागि KEY मा UUID राख्ने ताकि डुप्लिकेट नभनून्)
     const rowData = [
       toNepNum(data.nepDateRaw), data.nepDay, data.engDate, 
       (data.entryType === "Institution" ? "संस्था" : "रिजर्भ"),
@@ -149,34 +154,28 @@ function process(data, photoObj) {
       data.totalReserveAmount || 0, data.staffAllowance || 0, data.balance || 0,
       runningDieselLiter.toFixed(2), Math.round(runningDieselAmount),
       (data.entryType === "Reserve" ? Math.round(runningReserveBalance) : ""),
-      data.remarks || "", photoLink, currentKey
+      data.remarks || "", photoLink, (data.entryType === "Institution" ? currentKey : "RES_" + Utilities.getUuid())
     ];
 
     sheet.appendRow(rowData);
     
-    if (sheet.getLastRow() > 1) {
-      sheet.getRange(2, 1, sheet.getLastRow() - 1, 21).sort({column: 1, ascending: true});
-    }
-
-    const finalRow = sheet.getLastRow();
-    const range = sheet.getRange(2, 1, finalRow - 1, 21);
-    const values = range.getValues();
+    // हालै थपिएको रोको फर्म्याटिङ
+    const newRowIdx = sheet.getLastRow();
+    const newRowRange = sheet.getRange(newRowIdx, 1, 1, 21);
+    newRowRange.setVerticalAlignment("middle").setHorizontalAlignment("center");
     
-    for (let i = 0; i < values.length; i++) {
-      let rowNum = i + 2;
-      let rRange = sheet.getRange(rowNum, 1, 1, 21);
-      rRange.setVerticalAlignment("middle").setHorizontalAlignment("center");
-      if (values[i][3] === "रिजर्भ") {
-        rRange.setFontColor("#ff0000").setFontWeight("bold");
-      } else {
-        rRange.setFontColor("#000000").setFontWeight("normal");
-      }
+    // रिजर्भ भएको खण्डमा टेक्स्ट रातो र बोल्ड गर्ने
+    if (data.entryType === "Reserve") {
+      newRowRange.setFontColor("#ff0000").setFontWeight("bold");
+    } else {
+      newRowRange.setFontColor("#000000").setFontWeight("normal");
     }
 
+    // कोलम अटो-साइज (अलि बढी प्याडिङ सहित)
     sheet.autoResizeColumns(1, 21);
     for (let col = 1; col <= 21; col++) {
       let currentWidth = sheet.getColumnWidth(col);
-      sheet.setColumnWidth(col, currentWidth + 40); 
+      sheet.setColumnWidth(col, currentWidth + 35); 
     }
 
     return "SUCCESS";
