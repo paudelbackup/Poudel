@@ -19,8 +19,8 @@
 
     .loan-dash { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: #000; padding: 5px; border-radius: 8px; border: 1px solid var(--theme); margin-top: 5px; }
     .dash-box { text-align: center; padding: 3px; }
-    .dash-box span { font-size: 10px; color: #94a3b8; display: block; }
-    .dash-box b { font-size: 12px; color: #fff; }
+    .dash-box span { font-size: 9px; color: #94a3b8; display: block; }
+    .dash-box b { font-size: 11px; color: #fff; }
 
     .red-bar { background: var(--danger); color: white; text-align: center; padding: 8px; border-radius: 8px; font-weight: 800; font-size: 18px; border: 1.5px solid #fff; margin: 5px 0; }
 
@@ -33,8 +33,16 @@
     .cam-box { background: var(--input); border: 1.5px solid #334155; border-radius: 8px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
     #preview { position: absolute; width: 100%; height: 100%; border-radius: 6px; object-fit: cover; display: none; }
 
-    .btn-save { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 800; margin-top: auto; }
-    
+    /* Submit Button & Loading */
+    .btn-save { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 800; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+    .btn-save:disabled { background: #555; cursor: not-allowed; }
+    .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--theme); border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; display: none; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Success Pop-up */
+    #successBox { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:var(--card); border:3px solid var(--success); color:white; padding:30px; border-radius:20px; text-align:center; z-index:5000; box-shadow: 0 0 40px rgba(0,0,0,0.6); animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes pop { from { scale: 0.5; opacity: 0; } to { scale: 1; opacity: 1; } }
+
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; padding:15px; overflow-y: auto; }
     .modal-content { background: var(--card); border-radius: 15px; border: 2px solid var(--theme); padding: 15px; position: relative; top: 5%; }
     
@@ -57,12 +65,12 @@
 
   <div id="lDash" style="display:none;">
     <div class="loan-dash">
-      <div class="dash-box"><span>पुरानो मिति</span><b id="oDate">-</b></div>
-      <div class="dash-box"><span>पुरानो बाँकी</span><b id="oTot">०</b></div>
-      <div class="dash-box"><span>पुरानो सावाँ</span><b id="oSaw">०</b></div>
+      <div class="dash-box"><span>अन्तिम मिति</span><b id="oDate">-</b></div>
+      <div class="dash-box"><span>कारोबार संख्या</span><b id="oCount">०</b></div>
+      <div class="dash-box"><span>बाँकी सावाँ</span><b id="oSaw">०</b></div>
     </div>
     <div class="loan-dash" style="margin-top:4px;">
-      <div class="dash-box"><span>ब्याज %</span><b id="oRate">०</b></div>
+      <div class="dash-box"><span>पुरानो दर %</span><b id="oRate">०</b></div>
       <div class="dash-box"><span>आजको ब्याज</span><b id="tByaj" style="color:var(--success);">०</b></div>
       <div class="dash-box"><span>कुल बाँकी</span><b id="gTot" style="color:var(--danger);">०</b></div>
     </div>
@@ -98,21 +106,36 @@
     </div>
 
     <div id="billUI" class="grid-2" style="margin-top:5px;">
-      <div class="group"><label>बिल रकम (+)</label><input type="number" id="bA" value="0" oninput="calc()"></div>
-      <div class="group"><label>तिरेको रकम (-)</label><input type="number" id="pA" value="0" oninput="calc()"></div>
+      <div><label id="lblPlus">बिल रकम (+)</label><input type="number" id="bA" value="0" oninput="calc()"></div>
+      <div><label id="lblMinus">तिरेको रकम (-)</label><input type="number" id="pA" value="0" oninput="calc()"></div>
     </div>
 
     <div class="action-row">
-      <div class="group"><label>कैफियत</label><input type="text" id="remk" placeholder="कैफियत लेख्नुहोस्..." style="height:50px;"></div>
+      <div class="group">
+        <label>कैफियत</label>
+        <input type="text" id="remk" placeholder="विवरण लेख्नुहोस्..." style="height:50px;">
+      </div>
       <div class="group">
         <label>फोटो</label>
-        <label for="imgInp" class="cam-box"><i class="fas fa-camera" style="color:var(--theme); font-size:24px;"></i><img id="preview"></label>
+        <label for="imgInp" class="cam-box">
+          <i class="fas fa-camera" id="camIcon" style="color:var(--theme); font-size:24px;"></i>
+          <img id="preview">
+        </label>
         <input type="file" id="imgInp" accept="image/*" style="display:none" onchange="previewImg(this)">
       </div>
     </div>
 
-    <button type="button" class="btn-save" onclick="save()">डाटा सुरक्षित गर्नुहोस्</button>
+    <button type="button" class="btn-save" id="saveBtn" onclick="save()">
+      <span id="btnText">डाटा सुरक्षित गर्नुहोस्</span>
+      <div id="loader" class="loader"></div>
+    </button>
   </form>
+</div>
+
+<div id="successBox">
+  <i class="fas fa-check-circle" style="color:var(--success); font-size:60px; margin-bottom:15px;"></i>
+  <h2>सुरक्षित भयो!</h2>
+  <p style="color:#94a3b8; margin-top:5px;">डाटा सफलतापूर्वक पठाइयो।</p>
 </div>
 
 <div id="mMenu" class="modal">
@@ -150,15 +173,24 @@
 </div>
 
 <script>
-  let cfg = { dateOff: 0 }, curB = 0, oldS = 0, imageBase64 = "", curT = '';
+  let cfg = { dateOff: 0 }, curB = 0, oldSawa = 0, oldByaj = 0, curTotal = 0, imageBase64 = "", curT = '';
   const nD = ['०','१','२','३','४','५','६','७','८','९'];
+  const nM = ["बैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"];
+  const nB = ["आइतबार", "सोमबार", "मंगलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार"];
+  const bsData = { 2081:[31,32,31,32,31,30,30,30,29,30,29,31], 2082:[31,31,32,31,31,31,30,29,30,29,30,30], 2083:[31,31,32,31,31,31,30,29,30,29,30,30] };
 
   function toN(n) { return n.toString().split('').map(d => nD[d] || d).join(''); }
   function openMenu() { document.getElementById('mMenu').style.display='block'; }
+  
   function previewImg(i) {
     if (i.files && i.files[0]) {
       let r = new FileReader();
-      r.onload = e => { imageBase64 = e.target.result; document.getElementById('preview').src = e.target.result; document.getElementById('preview').style.display = 'block'; };
+      r.onload = e => { 
+        imageBase64 = e.target.result; 
+        document.getElementById('preview').src = e.target.result; 
+        document.getElementById('preview').style.display = 'block'; 
+        document.getElementById('camIcon').style.color = "#22c55e";
+      };
       r.readAsDataURL(i.files[0]);
     }
   }
@@ -167,9 +199,14 @@
     let d = new Date();
     document.getElementById('eD').value = d.toLocaleDateString('en-GB');
     document.getElementById('dispEng').innerText = d.toDateString();
-    let gate = 11 + (parseInt(cfg.dateOff) || 0);
-    let bar = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"][d.getDay()];
-    document.getElementById('dispNep').innerText = "२०८३ बैशाख " + toN(gate) + " " + bar;
+    let baseGate = 11;
+    let diff = Math.floor((d - new Date("2025-02-23")) / 86400000); 
+    let todayGate = baseGate + diff + (parseInt(cfg.dateOff) || 0);
+    let currY = 2081, currM = 10;
+    let daysInCurrM = bsData[currY][currM];
+    while(todayGate > daysInCurrM) { todayGate -= daysInCurrM; currM++; if(currM > 11) { currM = 0; currY++; } daysInCurrM = bsData[currY][currM]; }
+    while(todayGate <= 0) { currM--; if(currM < 0) { currM = 11; currY--; } daysInCurrM = bsData[currY][currM]; todayGate += daysInCurrM; }
+    document.getElementById('dispNep').innerText = toN(currY) + " " + nM[currM] + " " + toN(todayGate) + " " + nB[d.getDay()];
   }
 
   function sub(t) {
@@ -185,64 +222,97 @@
   function rem(i) { let items = cfg[curT].split(','); items.splice(i,1); cfg[curT] = items.join(','); google.script.run.updateSettings(curT, cfg[curT]); list(); }
 
   function ui() {
-    const c = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
-    document.getElementById('lDash').style.display = (c==='ऋण'?'block':'none');
-    document.getElementById('loanUI').style.display = (c==='ऋण'?'block':'none');
-    document.getElementById('billUI').style.display = (c==='ऋण'?'none':'grid');
-    let l = (c==="संस्था")?cfg.inst:(c==="ऋण")?cfg.loan:(c==="मर्मत")?cfg.repair:(c==="कर्मचारी")?cfg.staff:cfg.pers;
-    document.getElementById('tN').innerHTML = l ? l.split(',').map(x=>`<option value="${x}">${x}</option>`).join('') : '<option>नाम थप्नुहोस्</option>';
+    const isLoan = document.getElementById('cat').value.includes('ऋण');
+    let cat = document.getElementById('cat').value;
+    if(cat.includes('संस्था')) { document.getElementById('lblPlus').innerText = "पाउनु पर्ने रकम (+)"; document.getElementById('lblMinus').innerText = "पाएको रकम (-)"; } 
+    else if(cat.includes('कर्मचारी')) { document.getElementById('lblPlus').innerText = "बाँकी रकम (+)"; document.getElementById('lblMinus').innerText = "दिइएको रकम (-)"; } 
+    else { document.getElementById('lblPlus').innerText = "बिल रकम (+)"; document.getElementById('lblMinus').innerText = "तिरेको रकम (-)"; }
+
+    document.getElementById('loanUI').style.display = isLoan ? 'block' : 'none';
+    document.getElementById('lDash').style.display = isLoan ? 'block' : 'none';
+    document.getElementById('billUI').style.display = isLoan ? 'none' : 'grid';
+    let list = cat.includes("संस्था") ? cfg.inst : cat.includes("ऋण") ? cfg.loan : cat.includes("मर्मत") ? cfg.repair : cat.includes("कर्मचारी") ? cfg.staff : cfg.pers;
+    document.getElementById('tN').innerHTML = list ? list.split(',').map(x => `<option value="${x.trim()}">${x.trim()}</option>`).join('') : '<option>नाम थप्नुहोस्</option>';
     sum();
   }
 
   function sum() {
-    const name = document.getElementById('tN').value;
-    const cat = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
-    if(!name || name.includes("नाम")) return;
+    let name = document.getElementById('tN').value, cat = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
     google.script.run.withSuccessHandler(r => {
-      document.getElementById('oDate').innerText = r.oldDate || "-";
-      document.getElementById('oTot').innerText = toN(r.total || 0);
-      document.getElementById('oSaw').innerText = toN(r.oldSawa || 0);
-      curB = r.total || 0; oldS = r.oldSawa || 0; calc();
+      document.getElementById('oDate').innerText = r.lastDate; document.getElementById('oCount').innerText = toN(r.count);
+      document.getElementById('oSaw').innerText = toN(r.sawa); document.getElementById('oRate').innerText = toN(r.rate);
+      oldSawa = parseFloat(r.sawa); oldByaj = parseFloat(r.byaj); curTotal = parseFloat(r.total); calc();
     }).getSummary(name, cat);
   }
 
   function calc() {
-    const c = document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, '');
-    if(c === 'ऋण') {
-        let rate = parseFloat(document.getElementById('r').value)||0;
-        let byaj = Math.round(oldS * (rate/100)/12);
-        let kista = parseFloat(document.getElementById('k').value)||0;
-        let adds = parseFloat(document.getElementById('aS').value)||0;
-        let paids = parseFloat(document.getElementById('pS').value)||0;
-        document.getElementById('tByaj').innerText = toN(byaj);
-        document.getElementById('oRate').innerText = toN(rate);
-        let f = curB + byaj + adds - (kista + paids);
-        document.getElementById('gTot').innerText = toN(f);
-        document.getElementById('hBal').innerText = toN(f);
+    let isLoan = document.getElementById('cat').value.includes('ऋण'), total = 0;
+    if(isLoan) {
+      let addS = parseFloat(document.getElementById('aS').value) || 0;
+      let rate = parseFloat(document.getElementById('r').value) || 0;
+      let pS = parseFloat(document.getElementById('pS').value) || 0;
+      let kista = parseFloat(document.getElementById('k').value) || 0;
+      let todayByaj = Math.round(oldSawa * (rate/100) / 12); 
+      document.getElementById('tByaj').innerText = toN(todayByaj);
+      let finalSawa = oldSawa + addS - pS - kista;
+      let finalByaj = oldByaj + todayByaj;
+      total = finalSawa + finalByaj;
+      document.getElementById('gTot').innerText = toN(total);
     } else {
-        let b = parseFloat(document.getElementById('bA').value)||0;
-        let p = parseFloat(document.getElementById('pA').value)||0;
-        document.getElementById('hBal').innerText = toN(curB + b - p);
+      total = curTotal + (parseFloat(document.getElementById('bA').value) || 0) - (parseFloat(document.getElementById('pA').value) || 0);
     }
+    document.getElementById('hBal').innerText = toN(total);
   }
 
   function save() {
-    const name = document.getElementById('tN').value;
+    let name = document.getElementById('tN').value;
     if(!name || name.includes("नाम")) return alert("नाम छान्नुहोस्!");
-    const d = {
+    
+    // Start Loading
+    const btn = document.getElementById('saveBtn');
+    const txt = document.getElementById('btnText');
+    const ldr = document.getElementById('loader');
+    btn.disabled = true;
+    txt.innerText = "प्रक्रिया हुँदैछ...";
+    ldr.style.display = 'block';
+
+    let isLoan = document.getElementById('cat').value.includes('ऋण');
+    let nepTotal = document.getElementById('hBal').innerText.replace(/[०-९]/g, d=>nD.indexOf(d));
+    
+    let obj = {
       nepDate: document.getElementById('dispNep').innerText,
-      category: document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, ''),
-      targetName: name,
-      sawaAmt: parseFloat(document.getElementById('aS').value)||0,
-      byajAmt: document.getElementById('cat').value.includes('ऋण') ? parseFloat(document.getElementById('tByaj').innerText.replace(/[०-९]/g, d=>nD.indexOf(d))) : 0,
-      totalAmt: parseFloat(document.getElementById('hBal').innerText.replace(/[०-९]/g, d=>nD.indexOf(d)))||0,
+      engDate: document.getElementById('eD').value,
+      cat: document.getElementById('cat').value.replace(/[^अ-ज्ञ]/g, ''),
+      name: name,
+      rate: isLoan ? parseFloat(document.getElementById('r').value) : 0,
+      addSawa: isLoan ? parseFloat(document.getElementById('aS').value) : 0,
+      paidSawa: isLoan ? parseFloat(document.getElementById('pS').value) : 0,
+      kista: isLoan ? parseFloat(document.getElementById('k').value) : 0,
+      billAmt: !isLoan ? parseFloat(document.getElementById('bA').value) : 0,
+      payAmt: !isLoan ? parseFloat(document.getElementById('pA').value) : 0,
+      totalAmt: parseFloat(nepTotal),
       remarks: document.getElementById('remk').value,
       imageBlob: imageBase64
     };
-    google.script.run.withSuccessHandler(m => { alert(m); location.reload(); }).processEntry(d);
+    
+    google.script.run.withSuccessHandler(m => {
+      // Show Success Animation
+      ldr.style.display = 'none';
+      txt.innerText = "सफल भयो!";
+      document.getElementById('successBox').style.display = 'block';
+      
+      // Auto Reset after 3 seconds
+      setTimeout(() => {
+        location.reload();
+      }, 3000);
+    }).processEntry(obj);
   }
 
-  window.onload = () => { updateDate(); google.script.run.withSuccessHandler(c => { cfg = c; ui(); }).getSettings(); };
+  window.onload = () => {
+    document.getElementById('eD').value = new Date().toISOString().split('T')[0];
+    updateDate();
+    google.script.run.withSuccessHandler(r => { cfg = r; updateDate(); ui(); }).getSettings();
+  };
 </script>
 </body>
 </html>
