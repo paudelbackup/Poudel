@@ -1,4 +1,3 @@
-// १. तपाईंको विवरणहरू यहाँ राख्नुहोस्
 const SPREADSHEET_ID = "13zSjJyoojvkchunfE_wLBckWQlP0Q6hFjHlxFlhbcGA";
 const FOLDER_ID = "1FSlCdPa2H8GVR74jSMf5q_MrwmOa4mA2";
 
@@ -9,73 +8,58 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// सेटिङहरू तान्ने (ड्रपडाउन र गतेको लागि)
 function getSettings() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName("Setting") || ss.insertSheet("Setting");
+  const sheet = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
   const data = sheet.getDataRange().getValues();
   let s = { inst: "", loan: "", repair: "", staff: "", pers: "", dateOff: 0 };
   data.forEach(r => { if(r[0]) s[r[0]] = r[1]; });
   return s;
 }
 
-// महिना अनुसार नयाँ शिट बनाउने र नेपाली हेडर राख्ने फङ्सन
 function getMonthlySheet(nepDate) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const parts = nepDate.split(" "); // "२०८३ बैशाख १२ शनिबार" बाट "२०८३" र "बैशाख" निकाल्छ
-  const sheetName = parts[0] + " " + parts[1]; // शिटको नाम: "२०८३ बैशाख"
-  
+  const parts = nepDate.split(" "); 
+  const sheetName = parts[0] + " " + parts[1];
   let sheet = ss.getSheetByName(sheetName);
   
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    // नेपाली हेडरहरू
-    const headers = [["मिति", "अङ्ग्रेजी मिति", "विवरण प्रकार", "नाम/संस्था", "थप सावाँ/बिल", "किस्ता/तिरेको", "कूल बाँकी", "कैफियत", "फोटो", "ब्याज दर%"]];
-    
-    // हेडर डिजाइन: रङ्गिन, बोल्ड र सेन्टर
+    // ब्याज दरलाई कैफियत (८ औं नम्बर) भन्दा अगाडि (७ औं नम्बरमा) राखिएको छ
+    const headers = [["मिति", "अङ्ग्रेजी मिति", "विवरण प्रकार", "नाम/संस्था", "थप सावाँ/बिल", "किस्ता/तिरेको", "ब्याज दर%", "कूल बाँकी", "कैफियत", "फोटो"]];
     sheet.getRange(1, 1, 1, 10).setValues(headers)
-         .setBackground("#ffb400")
-         .setFontWeight("bold")
-         .setHorizontalAlignment("center")
-         .setVerticalAlignment("middle");
-    
-    sheet.setFrozenRows(1); // पहिलो लाइन फ्रिज गर्ने
-    sheet.setColumnWidths(1, 10, 130); // कोलमको चौडाई मिलाउने
+         .setBackground("#ffb400").setFontWeight("bold").setHorizontalAlignment("center").setVerticalAlignment("middle");
+    sheet.setFrozenRows(1);
   }
   return sheet;
 }
 
-// नाम अनुसारको पुरानो हिसाब (Summary) तान्ने - Super Fast
 function getSummary(name, cat) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const summarySheet = ss.getSheetByName("Summary") || ss.insertSheet("Summary");
+  const summarySheet = ss.getSheetByName("सारांश") || ss.insertSheet("सारांश");
   const data = summarySheet.getDataRange().getValues();
   
-  // अन्तिमबाट खोज्दै जाने (छिटो हुन्छ)
+  // नाम र विवरण प्रकार दुवै मिलेको अन्तिम रेकर्ड खोज्ने
   for (let i = data.length - 1; i >= 1; i--) {
-    if (data[i][3] == name && data[i][2] == cat) {
+    if (data[i][3].toString().trim() === name.toString().trim() && data[i][2].toString().trim() === cat.toString().trim()) {
       return { 
         lastDate: data[i][0], 
         sawa: parseFloat(data[i][4]) || 0, 
-        byaj: 0, // यहाँ थप ब्याज लोजिक राख्न सकिन्छ
-        total: parseFloat(data[i][6]) || 0, 
-        rate: parseFloat(data[i][9]) || 12,
+        total: parseFloat(data[i][7]) || 0, // कुल बाँकी अब ७ औं इन्डेक्समा छ
+        rate: parseFloat(data[i][6]) || 12,
         count: i 
       };
     }
   }
-  return { lastDate: "-", sawa: 0, byaj: 0, total: 0, rate: 12, count: 0 };
+  return { lastDate: "-", sawa: 0, total: 0, rate: 12, count: 0 };
 }
 
-// डाटा सेभ गर्ने मुख्य फङ्सन
 function processEntry(obj) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const summarySheet = ss.getSheetByName("Summary") || ss.insertSheet("Summary");
-  const dataSheet = getMonthlySheet(obj.nepDate); // महिना अनुसारको शिट लिने
+  const summarySheet = ss.getSheetByName("सारांश") || ss.insertSheet("सारांश");
+  const dataSheet = getMonthlySheet(obj.nepDate);
   
   let photoLink = "फोटो छैन";
-  
-  // १. फोटो अपलोड लोजिक
   if (obj.imageBlob && obj.imageBlob.includes("base64")) {
     try {
       const folder = DriveApp.getFolderById(FOLDER_ID);
@@ -85,41 +69,37 @@ function processEntry(obj) {
       const file = folder.createFile(blob);
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
       photoLink = '=HYPERLINK("' + file.getUrl() + '", "फोटो हेर्नुहोस्")';
-    } catch (e) {
-      photoLink = "अपलोड त्रुटि";
-    }
+    } catch (e) { photoLink = "त्रुटि"; }
   }
 
-  // २. शिटमा बस्ने डाटाको लाइन (Row)
+  // विवरण प्रकार खाली नजाओस् भनेर सुनिश्चित गरिएको छ
   const rowData = [
-    obj.nepDate,                                  // A: मिति
-    obj.engDate,                                  // B: AD मिति
-    obj.cat,                                      // C: विवरण प्रकार
-    obj.name,                                     // D: नाम/संस्था
-    obj.cat === "ऋण" ? obj.addSawa : obj.billAmt, // E: थप रकम
-    obj.cat === "ऋण" ? (obj.paidSawa + obj.kista) : obj.payAmt, // F: तिरेको
-    obj.totalAmt,                                 // G: कूल बाँकी
-    obj.remarks,                                  // H: कैफियत
-    photoLink,                                    // I: फोटो लिङ्क
-    obj.rate                                      // J: ब्याज दर
+    obj.nepDate,
+    obj.engDate,
+    obj.cat, 
+    obj.name,
+    obj.cat === "ऋण" ? obj.addSawa : obj.billAmt,
+    obj.cat === "ऋण" ? (obj.paidSawa + obj.kista) : obj.payAmt,
+    obj.rate,       // ब्याज दर (कैफियत भन्दा अगाडि)
+    obj.totalAmt,   // कूल बाँकी
+    obj.remarks,    // कैफियत
+    photoLink       // फोटो
   ];
 
-  // ३. Monthly Sheet मा डाटा थप्ने र फम्र्याटिङ गर्ने
   dataSheet.appendRow(rowData);
   const lastRow = dataSheet.getLastRow();
-  const range = dataSheet.getRange(lastRow, 1, 1, 10);
+  dataSheet.getRange(lastRow, 1, 1, 10).setHorizontalAlignment("center").setVerticalAlignment("middle").setWrap(false);
   
-  // डाटा सेन्टर गर्ने र र्‍याप (Wrap) गर्ने ताकि टेक्स्ट नछोपियोस्
-  range.setHorizontalAlignment("center")
-       .setVerticalAlignment("middle")
-       .setWrap(true);
-  dataSheet.setRowHeight(lastRow, 45); // पर्याप्त ग्यापको लागि
+  for (let col = 1; col <= 10; col++) {
+    dataSheet.autoResizeColumn(col);
+    dataSheet.setColumnWidth(col, dataSheet.getColumnWidth(col) + 15);
+  }
 
-  // ४. Summary Sheet अपडेट गर्ने (ताकि अर्को पटक झट्टै हिसाब आओस्)
+  // सारांश अपडेट
   const sData = summarySheet.getDataRange().getValues();
   let found = false;
   for(let i=1; i<sData.length; i++){
-    if(sData[i][3] === obj.name && sData[i][2] === obj.cat) {
+    if(sData[i][3].toString().trim() === obj.name.toString().trim() && sData[i][2].toString().trim() === obj.cat.toString().trim()) {
       summarySheet.getRange(i+1, 1, 1, 10).setValues([rowData]);
       found = true; 
       break;
@@ -127,21 +107,16 @@ function processEntry(obj) {
   }
   if(!found) summarySheet.appendRow(rowData);
 
-  return "डाटा सफलतापूर्वक सुरक्षित गरियो!";
+  return "सफल भयो";
 }
 
-// सेटिङ अपडेट गर्ने (नाम थप्ने वा गते मिलाउने)
 function updateSettings(type, value) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName("Setting") || ss.insertSheet("Setting");
+  const sheet = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
   const data = sheet.getDataRange().getValues();
   let found = false;
   for(let i=0; i<data.length; i++){
-    if(data[i][0] === type) { 
-      sheet.getRange(i+1, 2).setValue(value); 
-      found = true; 
-      break; 
-    }
+    if(data[i][0] === type) { sheet.getRange(i+1, 2).setValue(value); found = true; break; }
   }
   if(!found) sheet.appendRow([type, value]);
 }
