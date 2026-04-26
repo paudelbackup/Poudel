@@ -22,7 +22,10 @@
     .dash-box span { font-size: 11px; color: #94a3b8; font-weight: 700; display: block; }
     .dash-box b { font-size: 16px; color: #fff; font-weight: 800; }
 
-    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 6px; border-radius: 10px; font-weight: 800; font-size: 18px; border: 2px solid #fff; margin: 4px 0; }
+    /* अपडेट गरिएको ५०/५० बक्स डिजाइन */
+    .status-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0; }
+    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 6px 2px; border-radius: 10px; font-weight: 800; font-size: 15px; border: 2px solid #fff; }
+    .blue-bar { background: #0056b3; color: #fff; text-align: center; padding: 6px 2px; border-radius: 10px; font-weight: 800; font-size: 15px; border: 2px solid #fff; }
 
     label { font-size: 15px; color: var(--theme); margin-left: 5px; font-weight: 800; display: block; margin-top: 5px; }
     input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 10px; padding: 0 12px; height: 48px; color: #00ff66; font-size: 18px; font-weight: 800; outline: none; }
@@ -69,7 +72,10 @@
     </div>
   </div>
 
-  <div class="red-bar">कुल बाँकी: रु. <span id="hBal">०</span></div>
+  <div class="status-container">
+    <div class="red-bar">बाँकी: रु. <span id="hBal">०</span></div>
+    <div class="blue-bar">अन्तिम: रु. <span id="lastAmt">०</span></div>
+  </div>
 
   <form id="f">
     <div class="grid-2">
@@ -104,8 +110,8 @@
     </div>
 
     <div id="billUI" class="grid-2">
-      <div><label>पाउनु पर्ने (+)</label><input type="number" id="bA" value="0" oninput="calc()"></div>
-      <div><label>पाएको (-)</label><input type="number" id="pA" value="0" oninput="calc()"></div>
+      <div><label id="lblBill">पाउनु पर्ने (+)</label><input type="number" id="bA" value="0" oninput="calc()"></div>
+      <div><label id="lblPaid">पाएको (-)</label><input type="number" id="pA" value="0" oninput="calc()"></div>
     </div>
 
     <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
@@ -230,6 +236,15 @@
     document.getElementById('loanUI').style.display = isL ? 'block' : 'none';
     document.getElementById('lDash').style.display = isL ? 'block' : 'none';
     document.getElementById('billUI').style.display = isL ? 'none' : 'grid';
+
+    if(cat === 'मर्मत' || cat === 'कर्मचारी') {
+      document.getElementById('lblBill').innerText = "दिनु पर्ने (+)";
+      document.getElementById('lblPaid').innerText = "दिएको रकम (-)";
+    } else {
+      document.getElementById('lblBill').innerText = "पाउनु पर्ने (+)";
+      document.getElementById('lblPaid').innerText = "पाएको (-)";
+    }
+
     let key = { 'संस्था':'inst', 'ऋण':'loan', 'मर्मत':'repair', 'कर्मचारी':'staff', 'व्यक्तिगत':'pers' }[cat];
     document.getElementById('tN').innerHTML = cfg[key] ? cfg[key].split(',').filter(x=>x.trim()).map(x => `<option value="${x.trim()}">${x.trim()}</option>`).join('') : '<option>थप्नुहोस्</option>';
     sum();
@@ -245,6 +260,10 @@
       document.getElementById('lastK').innerText = toN(Math.round(r.lastPaidKista));
       document.getElementById('tByaj').innerText = toN(r.accruedInterest);
       document.getElementById('oTotal').innerText = toN(r.total);
+      
+      // अन्तिम कारोबार रकम डिस्प्ले
+      document.getElementById('lastAmt').innerText = toN(Math.round(r.lastTransaction || 0));
+
       oldSawa = r.sawa; oldInterest = r.accruedInterest; serverTotal = r.total;
       calc();
     }).getSummary(name, cat, ed);
@@ -288,11 +307,10 @@
     }).processEntry(obj);
   }
 
-  // AD Date नमेटिने गरी सुधारिएको रिसेट फङ्सन
   function resetForm() {
-    const currentAD = document.getElementById('eD').value; // हालको मिति सुरक्षित राख्ने
+    const currentAD = document.getElementById('eD').value; 
     document.getElementById('f').reset(); 
-    document.getElementById('eD').value = currentAD; // पुन: मिति सेट गर्ने
+    document.getElementById('eD').value = currentAD; 
     document.getElementById('imgPrev').style.display = 'none'; 
     imgBase64 = "";
     document.getElementById('saveBtn').disabled = false; 
