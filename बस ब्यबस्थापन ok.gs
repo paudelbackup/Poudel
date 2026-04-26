@@ -21,6 +21,7 @@ function getSummary(name, cat, currentEngDate) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheets = ss.getSheets();
   let allEntries = [];
+  
   sheets.forEach(sheet => {
     if (["सेटिङ", "सारांश"].includes(sheet.getName())) return;
     let data = sheet.getDataRange().getValues();
@@ -38,8 +39,12 @@ function getSummary(name, cat, currentEngDate) {
       }
     }
   });
+
+  // मिति अनुसार क्रमबद्ध गर्ने
   allEntries.sort((a, b) => a.engDate - b.engDate);
-  let runningSawa = 0, totalInterestAccrued = 0, lastDate = null, currentRate = 12, lastK = 0;
+
+  let runningSawa = 0, totalInterestAccrued = 0, lastDate = null, currentRate = 12, lastK = 0, lastTransactionAmt = 0;
+
   allEntries.forEach(entry => {
     if (lastDate) {
       let days = Math.floor((entry.engDate - lastDate) / (1000 * 60 * 60 * 24));
@@ -49,13 +54,19 @@ function getSummary(name, cat, currentEngDate) {
     totalInterestAccrued -= entry.paidByaj;
     currentRate = entry.rate;
     lastDate = entry.engDate;
+    
     if(entry.paidKista > 0) lastK = entry.paidKista;
+    
+    // अन्तिम कारोबार रकम सेट गर्ने (थपिएको सावाँ वा तिरेको रकम मध्ये जुन छ)
+    lastTransactionAmt = entry.addSawa !== 0 ? entry.addSawa : entry.paidKista;
   });
+
   let selectedDate = new Date(currentEngDate);
   if (lastDate && selectedDate > lastDate) {
     let days = Math.floor((selectedDate - lastDate) / (1000 * 60 * 60 * 24));
     totalInterestAccrued += (runningSawa * (currentRate / 100) * days) / 365;
   }
+
   return {
     lastDate: allEntries.length > 0 ? allEntries[allEntries.length-1].nepDate : "-",
     sawa: runningSawa,
@@ -63,6 +74,7 @@ function getSummary(name, cat, currentEngDate) {
     rate: currentRate,
     count: allEntries.length,
     lastPaidKista: lastK,
+    lastTransaction: lastTransactionAmt, // HTML एपको निलो बक्सको लागि
     total: Math.round(runningSawa + totalInterestAccrued)
   };
 }
@@ -71,6 +83,7 @@ function processEntry(obj) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const dataSheet = getMonthlySheet(obj.nepDate);
   let photoLink = "फोटो छैन";
+  
   if (obj.imageBlob && obj.imageBlob.includes("base64")) {
     try {
       const folder = DriveApp.getFolderById(FOLDER_ID);
@@ -82,16 +95,28 @@ function processEntry(obj) {
       photoLink = '=HYPERLINK("' + file.getUrl() + '", "फोटो हेर्नुहोस्")';
     } catch (e) { photoLink = "त्रुटि"; }
   }
-  dataSheet.appendRow([obj.nepDate, obj.engDate, obj.cat, obj.name, obj.addSawa_or_Bill, obj.paidKista_or_Pay, obj.paidByaj, obj.rate, obj.totalAmt, obj.remarks, photoLink]);
+
+  dataSheet.appendRow([
+    obj.nepDate, 
+    obj.engDate, 
+    obj.cat, 
+    obj.name, 
+    obj.addSawa_or_Bill, 
+    obj.paidKista_or_Pay, 
+    obj.paidByaj, 
+    obj.rate, 
+    obj.totalAmt, 
+    obj.remarks, 
+    photoLink
+  ]);
   
-  // मिति अनुसार डेटा मिलाउने (Sort by Date Column B)
+  // मिति अनुसार डेटा मिलाउने
   const lastRow = dataSheet.getLastRow();
   const lastCol = dataSheet.getLastColumn();
   if (lastRow > 1) {
     dataSheet.getRange(2, 1, lastRow - 1, lastCol).sort({column: 2, ascending: true});
   }
 
-  // सिट अटो-फर्म्याटिङ (Padding सहित)
   formatSheet(dataSheet);
   return "SUCCESS";
 }
@@ -99,29 +124,30 @@ function processEntry(obj) {
 function formatSheet(sheet) {
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
+  if (lastRow < 1) return;
+  
   const range = sheet.getRange(1, 1, lastRow, lastCol);
+  sheet.autoResizeColumns(1, lastCol);
   
-  sheet.autoResizeColumns(1, lastCol); // कोलमको चौडाइ स्वतः मिलाउने
-  
-  // प्रत्येक कोलममा अलिकति खाली ठाउँ (Padding) थप्ने ताकि अक्षर नछोपियोस्
   for (let i = 1; i <= lastCol; i++) {
     let currentWidth = sheet.getColumnWidth(i);
-    sheet.setColumnWidth(i, currentWidth + 30); // ३० पिक्सेल थप चौडाइ (Padding)
+    sheet.setColumnWidth(i, currentWidth + 30);
   }
 
-  range.setHorizontalAlignment("center"); // सेन्टर एलाइनमेन्ट
+  range.setHorizontalAlignment("center");
   range.setVerticalAlignment("middle");
-  range.setWrap(false); // Wrap Text बन्द
+  range.setWrap(false);
   
-  // हेडर डिजाइन
   sheet.getRange(1, 1, 1, lastCol).setBackground("#ffb400").setFontWeight("bold").setFontColor("#000000");
 }
 
 function getMonthlySheet(nepDate) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const parts = nepDate.split(" ");
+  // महिना अनुसार सिटको नाम (उदा: २०८१ बैशाख)
   const sheetName = parts[0] + " " + parts[1];
   let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+  
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(["मिति", "अङ्ग्रेजी मिति", "प्रकार", "नाम/संस्था", "थप सावाँ/बिल", "किस्ता/तिरेको", "ब्याज तिरेको", "दर%", "कुल बाँकी", "कैफियत", "फोटो"]);
   }
@@ -132,7 +158,13 @@ function updateSettings(t, v) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const s = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
   const d = s.getDataRange().getValues();
-  for(let i=0; i<d.length; i++) if(d[i][0]===t){ s.getRange(i+1,2).setValue(v); formatSheet(s); return; }
+  for(let i=0; i<d.length; i++) {
+    if(d[i][0] === t) { 
+      s.getRange(i+1, 2).setValue(v); 
+      formatSheet(s); 
+      return; 
+    }
+  }
   s.appendRow([t, v]);
   formatSheet(s);
 }
