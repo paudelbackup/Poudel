@@ -12,20 +12,55 @@ function processEntry(obj) {
   
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
+    // हेडर राख्ने
     sheet.appendRow(["मिति (BS)", "मिति (AD)", "प्रकार", "नाम", "ब्याज दर %", "थप सावाँ/बिल", "किस्ता/भुक्तानी", "तिरेको ब्याज", "बाँकी मौज्दात", "कैफियत", "फोटो"]);
-    sheet.getRange(1, 1, 1, 11).setFontWeight("bold").setBackground("#f3f3f3").setHorizontalAlignment("center");
   }
 
+  // फोटोको कन्डिसन चेक गर्ने
   const photoStatus = obj.imageBlob ? saveFile(obj) : "फोटो छैन";
 
+  // डेटा इन्ट्री गर्ने
   sheet.appendRow([
     obj.nepDate, obj.engDate, obj.cat, obj.name, obj.rate, 
     obj.addSawa_or_Bill, obj.paidKista_or_Pay, obj.paidByaj, 
     obj.totalAmt, obj.remarks, photoStatus
   ]);
 
-  sheet.autoResizeColumns(1, 11);
+  // सिटलाई तपाईंले भन्नुभएको जस्तै १ लाइनमा र चिटिक्क बनाउने फङ्सन
+  formatMySheet(sheet);
+  
   return "SUCCESS";
+}
+
+// सिटको डिजाइन सुधार गर्ने मुख्य फङ्सन
+function formatMySheet(sheet) {
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  const range = sheet.getRange(1, 1, lastRow, lastCol);
+
+  // १. सबै डेटालाई एकै लाइनमा राख्ने (No Wrap)
+  range.setWrap(false); 
+
+  // २. डेटा र हेडरलाई सेन्टरमा मिलाउने
+  range.setHorizontalAlignment("center");
+  range.setVerticalAlignment("middle");
+
+  // ३. कोलमको चौडाइ डेटा अनुसार अटोमेटिक बढाउने (ताकि टेक्स्ट नछोपियोस्)
+  sheet.autoResizeColumns(1, lastCol);
+
+  // ४. छेउ छेउमा खाली ठाउँ (Padding) को लागि कोलम अलिकति थप फराकिलो बनाउने
+  for (let i = 1; i <= lastCol; i++) {
+    let currentWidth = sheet.getColumnWidth(i);
+    sheet.setColumnWidth(i, currentWidth + 20); // २० पिक्सेल थप खाली ठाउँ
+  }
+
+  // ५. हेडरलाई बोल्ड र अलिकति फरक कलर दिने
+  const headerRange = sheet.getRange(1, 1, 1, lastCol);
+  headerRange.setFontWeight("bold");
+  headerRange.setBackground("#e2e8f0"); 
+  
+  // ६. सबै रो को हाइट एकनासको बनाउने
+  sheet.setRowHeights(1, lastRow, 35);
 }
 
 function getSummary(name, cat, selectedDate) {
@@ -35,7 +70,7 @@ function getSummary(name, cat, selectedDate) {
   const selDate = new Date(selectedDate);
 
   sheets.forEach(sheet => {
-    if(sheet.getName() === "Settings") return;
+    if(sheet.getName() === "Settings" || sheet.getName() === "सेटिङ") return;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
       if (data[i][2] === cat && data[i][3] === name) {
@@ -72,13 +107,16 @@ function saveFile(obj) {
     let folder, folders = DriveApp.getFoldersByName("Bus_Management_Photos");
     folder = folders.hasNext() ? folders.next() : DriveApp.createFolder("Bus_Management_Photos");
     const blob = Utilities.newBlob(Utilities.base64Decode(obj.imageBlob.split(',')[1]), "image/jpeg", obj.name + "_" + obj.nepDate + ".jpg");
-    return folder.createFile(blob).getUrl();
+    const file = folder.createFile(blob);
+    const url = file.getUrl();
+    // लिंकको सट्टा "फोटो हेर्नुस्" भनेर आउने बनाइएको
+    return '=HYPERLINK("' + url + '", "फोटो हेर्नुस्")';
   } catch(e) { return "Error"; }
 }
 
 function getSettings() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sSheet = ss.getSheetByName("Settings") || ss.insertSheet("Settings");
+  let sSheet = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
   const data = sSheet.getDataRange().getValues();
   let settings = {};
   for(let i=1; i<data.length; i++) { settings[data[i][0]] = data[i][1]; }
@@ -87,11 +125,12 @@ function getSettings() {
 
 function updateSettings(k, v) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sSheet = ss.getSheetByName("Settings") || ss.insertSheet("Settings");
+  let sSheet = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
   const data = sSheet.getDataRange().getValues();
   for(let i=1; i<data.length; i++) {
     if(data[i][0] == k) { sSheet.getRange(i+1, 2).setValue(v); return "DONE"; }
   }
   sSheet.appendRow([k, v]);
+  formatMySheet(sSheet); // सेटिङ सिटलाई पनि चिटिक्क बनाउने
   return "SUCCESS";
 }
