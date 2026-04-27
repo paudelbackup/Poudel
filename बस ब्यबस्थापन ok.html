@@ -5,44 +5,43 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&display=swap');
-    :root { --bg: #070a13; --theme: #ffb400; --card: #1e293b; --text: #ffffff; --input: #000000; --danger: #ff3131; --success: #00ff66; }
+    :root { --bg: #070a13; --theme: #ffb400; --card: #1e293b; --text: #ffffff; --input: #000; --danger: #ff3131; --success: #00ff66; }
     * { margin:0; padding:0; box-sizing:border-box; font-family: 'Mukta', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 5px; }
 
     .app { width: 100%; border: 4px solid var(--theme); border-radius: 15px; padding: 12px; background: #0f172a; min-height: 98vh; display: flex; flex-direction: column; gap: 8px; }
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 3px solid var(--theme); }
-    .logo-area { display: flex; align-items: center; gap: 10px; color: var(--theme); font-weight: 800; font-size: 22px; }
+    .logo-area { display: flex; align-items: center; gap: 10px; color: var(--theme); font-weight: 800; font-size: 24px; }
     
-    .date-section { background: #000; border-radius: 10px; padding: 4px; text-align: center; border: 2px solid var(--theme); }
-    .nep-date { font-size: 18px; font-weight: 800; color: #00fffc; } 
-    .eng-small { font-size: 12px; color: #cbd5e1; }
+    .date-section { background: #000; border-radius: 10px; padding: 6px; text-align: center; border: 2px solid var(--theme); }
+    .nep-date { font-size: 22px; font-weight: 800; color: #00fffc; } 
+    .eng-small { font-size: 14px; color: #cbd5e1; }
 
     .loan-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 5px 0; }
-    .dash-box { background: #1e293b; border: 2px solid #475569; border-radius: 8px; padding: 5px 2px; text-align: center; }
-    .dash-box span { font-size: 11px; color: #94a3b8; font-weight: 700; display: block; }
-    .dash-box b { font-size: 16px; color: #fff; font-weight: 800; }
+    .dash-box { background: #1e293b; border: 2px solid #475569; border-radius: 8px; padding: 8px 2px; text-align: center; }
+    .dash-box span { font-size: 13px; color: #94a3b8; font-weight: 700; display: block; }
+    .dash-box b { font-size: 19px; color: #fff; font-weight: 800; }
 
-    /* अपडेट गरिएको ५०/५० बक्स डिजाइन */
     .status-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0; }
-    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 6px 2px; border-radius: 10px; font-weight: 800; font-size: 15px; border: 2px solid #fff; }
-    .blue-bar { background: #0056b3; color: #fff; text-align: center; padding: 6px 2px; border-radius: 10px; font-weight: 800; font-size: 15px; border: 2px solid #fff; }
+    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 8px 2px; border-radius: 10px; font-weight: 800; font-size: 18px; border: 2px solid #fff; }
+    .blue-bar { background: #0056b3; color: #fff; text-align: center; padding: 8px 2px; border-radius: 10px; font-weight: 800; font-size: 18px; border: 2px solid #fff; }
 
-    label { font-size: 15px; color: var(--theme); margin-left: 5px; font-weight: 800; display: block; margin-top: 5px; }
-    input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 10px; padding: 0 12px; height: 48px; color: #00ff66; font-size: 18px; font-weight: 800; outline: none; }
+    label { font-size: 16px; color: var(--theme); margin-left: 5px; font-weight: 800; display: block; margin-top: 5px; }
+    input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 10px; padding: 0 10px; height: 50px; color: #00ff66; font-size: 20px; font-weight: 800; outline: none; }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     
-    .save-container { display: flex; justify-content: center; margin-top: 15px; }
-    .btn-save { width: 75%; background: var(--success); color: #000; border: none; padding: 12px; border-radius: 15px; font-size: 20px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 0 #008f39; }
+    .btn-save { width: 75%; background: var(--success); color: #000; border: none; padding: 15px; border-radius: 15px; font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 0 #008f39; margin: 20px auto; }
 
-    #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--success); color: #000; padding: 20px 40px; border-radius: 20px; font-weight: 900; font-size: 22px; z-index: 9999; text-align: center; border: 4px solid #fff; }
+    #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--success); color: #000; padding: 25px 45px; border-radius: 20px; font-weight: 900; font-size: 26px; z-index: 9999; text-align: center; border: 4px solid #fff; }
 
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2000; padding:15px; overflow-y: auto; }
     .modal-content { background: var(--card); border-radius: 20px; border: 3px solid var(--theme); padding: 20px; position: relative; top: 5%; }
-    .menu-item { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border: 2px solid #334155; border-left: 8px solid var(--theme); cursor: pointer; font-size: 18px; font-weight: 800; }
+    .menu-item { background: #0f172a; padding: 18px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border: 2px solid #334155; border-left: 8px solid var(--theme); cursor: pointer; font-size: 20px; font-weight: 800; }
     
-    .i-row { display: flex; justify-content: space-between; background: #000; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #444; font-size: 18px; font-weight: 800; color: #00ff66; }
-    .camera-btn { width: 48px; height: 48px; background: #000; border: 2px solid var(--theme); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
+    .i-row { display: flex; justify-content: space-between; background: #000; padding: 14px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #444; font-size: 20px; font-weight: 800; color: #00ff66; }
+    .camera-btn { width: 55px; height: 55px; background: #000; border: 2px solid var(--theme); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; margin-top: 25px; }
     .camera-btn img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
   </style>
 </head>
@@ -53,7 +52,7 @@
 <div class="app">
   <div class="header">
     <div class="logo-area"><i class="fas fa-bus-alt"></i> <b>बस व्यवस्थापन</b></div>
-    <i class="fas fa-bars" style="color:var(--theme); font-size: 30px; cursor:pointer;" onclick="openMenu()"></i>
+    <i class="fas fa-bars" style="color:var(--theme); font-size: 35px; cursor:pointer;" onclick="openMenu()"></i>
   </div>
 
   <div class="date-section">
@@ -99,13 +98,10 @@
         <div><label>सावाँ फिर्ता (-)</label><input type="number" id="pS" oninput="calc()" value="0"></div>
         <div><label>थप सावाँ (+)</label><input type="number" id="aS" oninput="calc()" value="0"></div>
       </div>
-      <div style="margin-top:5px;">
-        <label>आजको किस्ता तिरेको (-)</label>
-        <input type="number" id="curKista" oninput="calc()" value="0" style="color:#ffb400; border-color:var(--theme);">
-      </div>
-      <div class="grid-2" style="margin-top:5px;">
-        <div><label>ब्याज तिरेको (-)</label><input type="number" id="pB" oninput="calc()" value="0"></div>
-        <div><label>ब्याज दर %</label><input type="number" id="r" oninput="calc()" value="12"></div>
+      <div class="grid-3" style="margin-top:5px;">
+        <div><label>किस्ता तिरेको</label><input type="number" id="curKista" oninput="calc()" value="0" style="color:#ffb400; border-color:var(--theme); font-size:18px;"></div>
+        <div><label>ब्याज तिरेको</label><input type="number" id="pB" oninput="calc()" value="0" style="font-size:18px;"></div>
+        <div><label>ब्याज दर %</label><input type="number" id="r" oninput="calc()" value="12" style="font-size:18px;"></div>
       </div>
     </div>
 
@@ -116,18 +112,16 @@
 
     <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
       <div style="flex:1;"><label>कैफियत र फोटो</label><input type="text" id="remk" placeholder="विवरण..."></div>
-      <div class="camera-btn" onclick="document.getElementById('fileInp').click()" style="margin-top:22px;">
-        <i class="fas fa-camera" style="color:var(--theme); font-size: 22px;"></i>
+      <div class="camera-btn" onclick="document.getElementById('fileInp').click()">
+        <i class="fas fa-camera" style="color:var(--theme); font-size: 25px;"></i>
         <img id="imgPrev" style="display:none;">
       </div>
       <input type="file" id="fileInp" accept="image/*" style="display:none;" onchange="previewFile()">
     </div>
 
-    <div class="save-container">
-      <button type="button" class="btn-save" id="saveBtn" onclick="save()">
-        <i class="fas fa-save"></i> सुरक्षित गर्नुहोस्
-      </button>
-    </div>
+    <button type="button" class="btn-save" id="saveBtn" onclick="save()">
+      <i class="fas fa-save"></i> सुरक्षित गर्नुहोस्
+    </button>
   </form>
 </div>
 
@@ -140,27 +134,27 @@
     <div class="menu-item" onclick="sub('staff')"><span>👨‍✈️ कर्मचारी सेटिङ</span> <i class="fas fa-chevron-right"></i></div>
     <div class="menu-item" onclick="sub('pers')"><span>👤 व्यक्तिगत सेटिङ</span> <i class="fas fa-chevron-right"></i></div>
     <div class="menu-item" onclick="sub('date')"><span>📅 गते मिलाउनुहोस्</span> <i class="fas fa-chevron-right"></i></div>
-    <button onclick="closeModal('mMenu')" style="width:100%; padding:15px; background:var(--danger); border:none; color:#fff; border-radius:10px; font-weight:800; font-size: 18px; margin-top:10px;">बन्द गर्नुहोस्</button>
+    <button onclick="closeModal('mMenu')" style="width:100%; padding:18px; background:var(--danger); border:none; color:#fff; border-radius:10px; font-weight:800; font-size: 20px; margin-top:10px;">बन्द गर्नुहोस्</button>
   </div>
 </div>
 
 <div id="sSet" class="modal">
   <div class="modal-content">
-    <h3 id="sT" style="text-align:center; color:var(--theme); margin-bottom:15px; font-weight:800; font-size: 20px;"></h3>
+    <h3 id="sT" style="text-align:center; color:var(--theme); margin-bottom:15px; font-weight:800; font-size: 22px;"></h3>
     <div id="dateTools" style="display:none;">
       <div style="display:flex; justify-content:center; gap:25px; margin: 20px 0;">
-        <button onclick="adjDate(-1)" style="padding:15px 30px; background:var(--danger); color:white; border:none; border-radius:10px; font-weight:900; font-size: 20px;">- १ गते</button>
-        <button onclick="adjDate(1)" style="padding:15px 30px; background:var(--success); color:black; border:none; border-radius:10px; font-weight:900; font-size: 20px;">+ १ गते</button>
+        <button onclick="adjDate(-1)" style="padding:15px 30px; background:var(--danger); color:white; border:none; border-radius:10px; font-weight:900; font-size: 22px;">- १ गते</button>
+        <button onclick="adjDate(1)" style="padding:15px 30px; background:var(--success); color:black; border:none; border-radius:10px; font-weight:900; font-size: 22px;">+ १ गते</button>
       </div>
     </div>
     <div id="itemUI">
       <div style="display:flex; gap:10px; margin-bottom:15px;">
         <input type="text" id="nI" placeholder="नयाँ नाम...">
-        <button onclick="addItem()" style="padding: 0 20px; background:var(--theme); border:none; border-radius:10px; font-weight:900; color:#000;">थप्नु</button>
+        <button onclick="addItem()" style="padding: 0 25px; background:var(--theme); border:none; border-radius:10px; font-weight:900; color:#000; font-size:18px;">थप्नु</button>
       </div>
       <div id="iL"></div>
     </div>
-    <button onclick="closeModal('sSet'); openMenu();" style="width:100%; padding:15px; background:#475569; border:none; color:#fff; border-radius:12px; font-weight:800; font-size: 18px; margin-top:15px;">ब्याक जानुहोस्</button>
+    <button onclick="closeModal('sSet'); openMenu();" style="width:100%; padding:18px; background:#475569; border:none; color:#fff; border-radius:12px; font-weight:800; font-size: 20px; margin-top:15px;">ब्याक जानुहोस्</button>
   </div>
 </div>
 
@@ -189,10 +183,7 @@
     if(curT === 'date') return;
     let items = cfg[curT] ? cfg[curT].split(',') : [];
     document.getElementById('iL').innerHTML = items.filter(x=>x.trim()).map((x,i) => `
-      <div class="i-row">
-        <span>${x}</span>
-        <i class="fas fa-trash" style="color:var(--danger); cursor:pointer;" onclick="removeItem(${i})"></i>
-      </div>`).join('');
+      <div class="i-row"><span>${x}</span><i class="fas fa-trash" style="color:var(--danger); cursor:pointer;" onclick="removeItem(${i})"></i></div>`).join('');
   }
 
   function addItem() {
@@ -220,7 +211,9 @@
   }
 
   function updateDate() {
-    let d = document.getElementById('eD').value ? new Date(document.getElementById('eD').value) : new Date();
+    let now = new Date();
+    let nepalTime = new Date(now.getTime() + (now.getTimezoneOffset() + 345) * 60000);
+    let d = document.getElementById('eD').value ? new Date(document.getElementById('eD').value) : nepalTime;
     document.getElementById('dispEng').innerText = d.toDateString();
     let baseDate = new Date("2024-04-13");
     let diff = Math.floor((d - baseDate) / 86400000); 
@@ -260,10 +253,7 @@
       document.getElementById('lastK').innerText = toN(Math.round(r.lastPaidKista));
       document.getElementById('tByaj').innerText = toN(r.accruedInterest);
       document.getElementById('oTotal').innerText = toN(r.total);
-      
-      // अन्तिम कारोबार रकम डिस्प्ले
       document.getElementById('lastAmt').innerText = toN(Math.round(r.lastTransaction || 0));
-
       oldSawa = r.sawa; oldInterest = r.accruedInterest; serverTotal = r.total;
       calc();
     }).getSummary(name, cat, ed);
@@ -285,7 +275,7 @@
 
   function save() {
     const btn = document.getElementById('saveBtn');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>...';
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> सुरक्षित हुँदैछ...';
     let cat = document.getElementById('cat').value;
     let isL = (cat === 'ऋण' || cat === 'व्यक्तिगत');
     let engBal = document.getElementById('hBal').innerText.split('').map(c => nD.indexOf(c)!==-1?nD.indexOf(c):c).join('');
@@ -326,7 +316,9 @@
   }
 
   window.onload = () => {
-    document.getElementById('eD').value = new Date().toISOString().split('T')[0];
+    let now = new Date();
+    let nepalTime = new Date(now.getTime() + (now.getTimezoneOffset() + 345) * 60000);
+    document.getElementById('eD').value = nepalTime.toISOString().split('T')[0];
     google.script.run.withSuccessHandler(r => { cfg = r; updateDate(); ui(); }).getSettings();
   };
 </script>
