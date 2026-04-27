@@ -8,47 +8,48 @@
     :root { --bg: #070a13; --theme: #ffb400; --card: #1e293b; --text: #ffffff; --input: #000; --danger: #ff3131; --success: #00ff66; }
     * { margin:0; padding:0; box-sizing:border-box; font-family: 'Mukta', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 5px; }
-    .app { width: 100%; border: 3px solid var(--theme); border-radius: 15px; padding: 10px; background: #0f172a; min-height: 98vh; }
+    .app { width: 100%; border: 3px solid var(--theme); border-radius: 15px; padding: 10px; background: #0f172a; min-height: 98vh; position: relative; }
     .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px; border-bottom: 2px solid var(--theme); }
-    .logo-area { display: flex; align-items: center; gap: 8px; color: var(--theme); font-weight: 800; font-size: 22px; }
+    .logo-area { display: flex; align-items: center; gap: 8px; color: var(--theme); font-weight: 800; font-size: 20px; }
     .date-section { background: #000; border-radius: 10px; padding: 4px; text-align: center; border: 1px solid var(--theme); margin-top: 5px; }
-    .nep-date { font-size: 20px; font-weight: 800; color: #00fffc; } 
+    .nep-date { font-size: 19px; font-weight: 800; color: #00fffc; } 
     .loan-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 5px 0; }
-    .dash-box { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 5px 2px; text-align: center; }
-    .dash-box span { font-size: 11px; color: #94a3b8; font-weight: 700; display: block; }
-    .dash-box b { font-size: 16px; color: #fff; font-weight: 800; }
+    .dash-box { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 4px 2px; text-align: center; }
+    .dash-box span { font-size: 10px; color: #94a3b8; font-weight: 700; display: block; }
+    .dash-box b { font-size: 15px; color: #fff; font-weight: 800; }
     .status-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 5px 0; }
-    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 8px 2px; border-radius: 8px; font-weight: 800; font-size: 18px; border: 1px solid #fff; }
-    .blue-bar { background: #0056b3; color: #fff; text-align: center; padding: 8px 2px; border-radius: 8px; font-weight: 800; font-size: 18px; border: 1px solid #fff; }
-    label { font-size: 16px; color: var(--theme); margin-left: 5px; font-weight: 800; display: block; margin-top: 3px; }
-    input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 8px; padding: 0 10px; height: 45px; color: #00ff66; font-size: 20px; font-weight: 800; outline: none; }
-    .btn-save { width: 100%; background: var(--success); color: #000; border: none; padding: 12px; border-radius: 12px; font-size: 22px; font-weight: 900; margin-top: 15px; cursor: pointer; }
+    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 6px 2px; border-radius: 8px; font-weight: 800; font-size: 17px; border: 1px solid #fff; }
+    .blue-bar { background: #0056b3; color: #fff; text-align: center; padding: 6px 2px; border-radius: 8px; font-weight: 800; font-size: 17px; border: 1px solid #fff; }
+    label { font-size: 15px; color: var(--theme); margin-left: 5px; font-weight: 800; display: block; margin-top: 2px; }
+    input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 8px; padding: 0 10px; height: 42px; color: #00ff66; font-size: 19px; font-weight: 800; outline: none; }
+    .btn-save { width: 100%; background: var(--success); color: #000; border: none; padding: 10px; border-radius: 12px; font-size: 20px; font-weight: 900; margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
     
-    .date-control { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0; }
-    .btn-circle { width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 24px; font-weight: 800; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; }
-    .btn-minus { background: var(--danger); }
-    .btn-plus { background: var(--success); color: #000; }
-    .date-val { font-size: 28px; font-weight: 800; color: #fff; min-width: 40px; text-align: center; }
-
     #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
-    .loader { border: 8px solid #f3f3f3; border-top: 8px solid var(--theme); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+    .loader { border: 6px solid #f3f3f3; border-top: 6px solid var(--theme); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; padding:15px; overflow-y: auto; }
     .modal-content { background: var(--card); border-radius: 20px; border: 3px solid var(--theme); padding: 20px; }
-    .camera-btn { width: 50px; height: 50px; background: #000; border: 1px solid var(--theme); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-top: 25px; }
+    
+    .camera-btn { width: 45px; height: 45px; background: #000; border: 1px solid var(--theme); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-top: 22px; }
+
+    .date-control { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
+    .btn-circle { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 20px; font-weight: 800; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; }
+    .btn-minus { background: var(--danger); }
+    .btn-plus { background: var(--success); color: #000; }
   </style>
 </head>
 <body>
 
 <div id="overlay">
   <div class="loader" id="loaderCircle"></div>
-  <h2 id="statusMsg" style="color:var(--theme); margin-top:15px;">प्रक्रिया हुँदैछ...</h2>
+  <h2 id="statusMsg" style="color:var(--theme); margin-top:15px; text-align:center;">प्रक्रिया हुँदैछ...</h2>
 </div>
 
 <div class="app">
   <div class="header">
     <div class="logo-area"><i class="fas fa-bus-alt"></i> <b>बस व्यवस्थापन</b></div>
-    <i class="fas fa-cog" style="color:var(--theme); font-size: 30px; cursor:pointer;" onclick="openMenu()"></i>
+    <i class="fas fa-cog" style="color:var(--theme); font-size: 24px; cursor:pointer;" onclick="openMenu()"></i>
   </div>
 
   <div class="date-section"><div id="dispNep" class="nep-date">लोड हुँदै...</div></div>
@@ -106,21 +107,23 @@
     <div style="display:flex; gap:8px; align-items:center;">
       <div style="flex:1;"><label>कैफियत</label><input type="text" id="remk" placeholder="विवरण..."></div>
       <div class="camera-btn" onclick="document.getElementById('fileInp').click()">
-        <i class="fas fa-camera" style="color:var(--theme); font-size: 24px;"></i>
+        <i class="fas fa-camera" style="color:var(--theme); font-size: 20px;"></i>
         <img id="imgPrev" style="display:none; width:100%; height:100%; object-fit:cover; position:absolute; border-radius:8px;">
       </div>
       <input type="file" id="fileInp" accept="image/*" style="display:none;" onchange="previewFile()">
     </div>
-    <button type="button" class="btn-save" id="saveBtn" onclick="save()">सुरक्षित गर्नुहोस्</button>
+    <button type="button" class="btn-save" id="saveBtn" onclick="save()">
+      <i class="fas fa-save"></i> सुरक्षित गर्नुहोस्
+    </button>
   </form>
 </div>
 
 <div id="mMenu" class="modal">
   <div class="modal-content">
-    <h2 style="color:var(--theme); border-bottom:2px solid var(--theme); margin-bottom:10px; text-align:center;">गते मिलाउनुस्</h2>
+    <h2 style="color:var(--theme); border-bottom:2px solid var(--theme); margin-bottom:10px; text-align:center;">सेटिङ मिलाउनुस्</h2>
     <div class="date-control">
       <button class="btn-circle btn-minus" onclick="adjDate(-1)">-</button>
-      <div id="dateOffDisp" class="date-val">0</div>
+      <div id="dateOffDisp" class="date-val" style="font-size:24px; font-weight:800;">0</div>
       <button class="btn-circle btn-plus" onclick="adjDate(1)">+</button>
     </div>
     <label>संस्था</label><input type="text" id="sInst">
@@ -128,8 +131,10 @@
     <label>व्यक्तिगत</label><input type="text" id="sPers">
     <label>कर्मचारी</label><input type="text" id="sStaff">
     <label>मर्मत</label><input type="text" id="sRepair">
-    <button onclick="saveSettings()" style="background:var(--success); width:100%; padding:15px; margin-top:20px; font-weight:800; border-radius:10px;">सेभ गर्नुहोस्</button>
-    <button onclick="closeModal('mMenu')" style="background:var(--danger); width:100%; padding:12px; margin-top:10px; color:#fff; border-radius:10px; font-weight:800;">बन्द</button>
+    <button onclick="saveSettings()" style="background:var(--success); width:100%; padding:12px; margin-top:20px; font-weight:800; border-radius:10px; border:none; cursor:pointer;">
+      <i class="fas fa-check-circle"></i> सेभ गर्नुहोस्
+    </button>
+    <button onclick="closeModal('mMenu')" style="background:var(--danger); width:100%; padding:10px; margin-top:10px; color:#fff; border-radius:10px; font-weight:800; border:none; cursor:pointer;">बन्द</button>
   </div>
 </div>
 
@@ -150,7 +155,7 @@
     let currY = 2081, currM = 0;
     while(todayGate > bsData[currY][currM]) { todayGate -= bsData[currY][currM]; currM++; if(currM > 11){ currM=0; currY++; } }
     while(todayGate <= 0) { currM--; if(currM < 0){ currM=11; currY--; } todayGate += bsData[currY][currM]; }
-    globalSheetName = toN(currY) + nM[currM];
+    globalSheetName = toN(currY % 100).padStart(2, '०') + nM[currM];
     document.getElementById('dispNep').innerText = toN(currY) + " " + nM[currM] + " " + toN(todayGate) + " " + nB[d.getDay()];
   }
 
@@ -158,6 +163,7 @@
     let cur = parseInt(document.getElementById('dateOffDisp').innerText);
     cur += v;
     document.getElementById('dateOffDisp').innerText = cur;
+    updateDate();
   }
 
   function ui() {
@@ -167,7 +173,6 @@
     document.getElementById('lDash').style.display = isL ? 'block' : 'none';
     document.getElementById('billUI').style.display = isL ? 'none' : 'grid';
     
-    // टेक्स्ट अपडेट लजिक
     if(cat === 'कर्मचारी' || cat === 'मर्मत') {
       document.getElementById('billAddLabel').innerText = "दिनु पर्ने (+)";
       document.getElementById('billPaidLabel').innerText = "दिएको (-)";
@@ -175,7 +180,6 @@
       document.getElementById('billAddLabel').innerText = "पाउनु पर्ने (+)";
       document.getElementById('billPaidLabel').innerText = "पाएको (-)";
     }
-
     document.getElementById('kistaLabel').innerText = (cat === 'ऋण') ? "किस्ता अटो" : "किस्ता";
     
     let key = { 'संस्था':'sInst', 'ऋण':'sLoan', 'मर्मत':'sRepair', 'कर्मचारी':'sStaff', 'व्यक्तिगत':'sPers' }[cat];
@@ -237,7 +241,7 @@
     google.script.run.withSuccessHandler(() => {
       document.getElementById('loaderCircle').style.display = 'none';
       document.getElementById('statusMsg').innerHTML = '✅ सफलतापूर्वक सुरक्षित भयो!';
-      setTimeout(() => { location.reload(); }, 3000);
+      setTimeout(() => { location.reload(); }, 2500);
     }).processEntry(obj);
   }
 
@@ -273,7 +277,10 @@
   }
 
   window.onload = () => {
-    document.getElementById('eD').value = new Date().toISOString().split('T')[0];
+    let now = new Date();
+    let offset = now.getTimezoneOffset() * 60000;
+    let localISODate = new Date(now - offset).toISOString().split('T')[0];
+    document.getElementById('eD').value = localISODate;
     google.script.run.withSuccessHandler(r => { cfg = r; updateDate(); ui(); }).getSettings();
   };
 </script>
