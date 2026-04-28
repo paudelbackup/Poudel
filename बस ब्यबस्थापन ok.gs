@@ -26,41 +26,60 @@ function processEntry(obj) {
     obj.totalAmt, obj.remarks, photoStatus
   ]);
 
-  // सिटलाई तपाईंले भन्नुभएको जस्तै १ लाइनमा र चिटिक्क बनाउने फङ्सन
+  // मिति अनुसार क्रमबद्ध (Sort) गर्ने
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).sort({column: 1, ascending: true});
+  }
+
+  // सिट डिजाइन र अटो-साइज सुधार गर्ने
   formatMySheet(sheet);
   
   return "SUCCESS";
 }
 
-// सिटको डिजाइन सुधार गर्ने मुख्य फङ्सन
+// सिटलाई डाटा अनुसार अटोमेटिक साइज मिलाउने र चिटिक्क बनाउने फङ्सन
 function formatMySheet(sheet) {
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
+  if (lastRow === 0) return;
+
   const range = sheet.getRange(1, 1, lastRow, lastCol);
 
-  // १. सबै डेटालाई एकै लाइनमा राख्ने (No Wrap)
-  range.setWrap(false); 
-
-  // २. डेटा र हेडरलाई सेन्टरमा मिलाउने
+  // १. डाटा नछिप्ने गरी सेटिङ गर्ने (Wrap Text)
+  // यदि धेरै लामो डाटा छ भने अर्को लाइनमा जान्छ, तर नछिपी बस्छ
+  range.setWrap(true); 
   range.setHorizontalAlignment("center");
   range.setVerticalAlignment("middle");
+  range.setFontFamily("Mukta");
 
-  // ३. कोलमको चौडाइ डेटा अनुसार अटोमेटिक बढाउने (ताकि टेक्स्ट नछोपियोस्)
+  // २. कोलमको चौडाइ र रो को उचाइ डाटा अनुसार अटोमेटिक मिलाउने
   sheet.autoResizeColumns(1, lastCol);
-
-  // ४. छेउ छेउमा खाली ठाउँ (Padding) को लागि कोलम अलिकति थप फराकिलो बनाउने
+  
+  // कोलममा थोरै प्याडिङ थप्ने (थप स्पष्टताको लागि)
   for (let i = 1; i <= lastCol; i++) {
     let currentWidth = sheet.getColumnWidth(i);
-    sheet.setColumnWidth(i, currentWidth + 20); // २० पिक्सेल थप खाली ठाउँ
+    sheet.setColumnWidth(i, currentWidth + 15); 
   }
 
-  // ५. हेडरलाई बोल्ड र अलिकति फरक कलर दिने
-  const headerRange = sheet.getRange(1, 1, 1, lastCol);
-  headerRange.setFontWeight("bold");
-  headerRange.setBackground("#e2e8f0"); 
+  // ३. हेडरलाई रंगीचंगी (Multicolor) बनाउने
+  const colors = [
+    "#FFD1DC", "#C1E1C1", "#AEC6CF", "#FDFD96", "#FFB347", 
+    "#B39EB5", "#FF6961", "#77DD77", "#84B6F4", "#F49AC2", "#CB99C9"
+  ];
+
+  for (let j = 1; j <= lastCol; j++) {
+    let cell = sheet.getRange(1, j);
+    cell.setBackground(colors[(j - 1) % colors.length]);
+    cell.setFontWeight("bold");
+    cell.setFontSize(11);
+    cell.setBorder(true, true, true, true, null, null, "black", SpreadsheetApp.BorderStyle.SOLID);
+  }
   
-  // ६. सबै रो को हाइट एकनासको बनाउने
-  sheet.setRowHeights(1, lastRow, 35);
+  // ४. डाटा एरियामा बोर्डर र ग्रिड मिलाउने
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, lastCol).setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
+  }
 }
 
 function getSummary(name, cat, selectedDate) {
@@ -109,7 +128,6 @@ function saveFile(obj) {
     const blob = Utilities.newBlob(Utilities.base64Decode(obj.imageBlob.split(',')[1]), "image/jpeg", obj.name + "_" + obj.nepDate + ".jpg");
     const file = folder.createFile(blob);
     const url = file.getUrl();
-    // लिंकको सट्टा "फोटो हेर्नुस्" भनेर आउने बनाइएको
     return '=HYPERLINK("' + url + '", "फोटो हेर्नुस्")';
   } catch(e) { return "Error"; }
 }
@@ -127,10 +145,23 @@ function updateSettings(k, v) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sSheet = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
   const data = sSheet.getDataRange().getValues();
+  
+  let found = false;
   for(let i=1; i<data.length; i++) {
-    if(data[i][0] == k) { sSheet.getRange(i+1, 2).setValue(v); return "DONE"; }
+    if(data[i][0] == k) { 
+      sSheet.getRange(i+1, 2).setValue(v); 
+      found = true;
+      break;
+    }
   }
-  sSheet.appendRow([k, v]);
-  formatMySheet(sSheet); // सेटिङ सिटलाई पनि चिटिक्क बनाउने
+  
+  if(!found) {
+    sSheet.appendRow([k, v]);
+  }
+  
+  if (sSheet.getLastRow() > 0) {
+    sSheet.getRange(1, 1, 1, 2).setValues([["Key", "Value"]]);
+    formatMySheet(sSheet); 
+  }
   return "SUCCESS";
 }
