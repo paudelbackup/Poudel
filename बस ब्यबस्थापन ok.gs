@@ -1,5 +1,5 @@
 /**
- * बस व्यवस्थापन प्रणाली - सुधारेको कोड (Code.gs)
+ * बस व्यवस्थापन प्रणाली - Code.gs (Final Refined Logic)
  */
 
 function doGet() {
@@ -9,6 +9,7 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
+// १. डेटा सेभ गर्दा मिति अनुसार क्रमबद्ध गर्ने
 function processEntry(obj) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetName = obj.sheetYearMonth; 
@@ -28,83 +29,84 @@ function processEntry(obj) {
     obj.totalAmt, obj.remarks, photoStatus
   ]);
 
+  // मिति (AD - Column B) अनुसार Sort गर्ने ताकि हिसाब नबिग्रियोस्
   const lastRow = sheet.getLastRow();
   if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).sort({column: 1, ascending: true});
+    const range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
+    range.sort([{column: 2, ascending: true}]); 
   }
 
   formatMySheet(sheet);
   return "SUCCESS";
 }
 
-function formatMySheet(sheet) {
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  if (lastRow === 0) return;
-  const range = sheet.getRange(1, 1, lastRow, lastCol);
-  range.setWrapStrategy(SpreadsheetApp.WrapStrategy.OVERFLOW); 
-  range.setHorizontalAlignment("center");
-  range.setVerticalAlignment("middle");
-  range.setFontFamily("Mukta");
-  range.setFontSize(10);
-  sheet.autoResizeColumns(1, lastCol);
-  for (let i = 1; i <= lastCol; i++) {
-    let currentWidth = sheet.getColumnWidth(i);
-    sheet.setColumnWidth(i, currentWidth + 25); 
-  }
-  const colors = ["#FFD1DC", "#C1E1C1", "#AEC6CF", "#FDFD96", "#FFB347", "#B39EB5", "#FF6961", "#77DD77", "#84B6F4", "#F49AC2", "#CB99C9"];
-  for (let j = 1; j <= lastCol; j++) {
-    let headerCell = sheet.getRange(1, j);
-    headerCell.setBackground(colors[(j - 1) % colors.length]);
-    headerCell.setFontWeight("bold");
-    headerCell.setBorder(true, true, true, true, null, null, "black", SpreadsheetApp.BorderStyle.SOLID);
-  }
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, lastCol).setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
-  }
-  sheet.setRowHeights(1, lastRow, 21);
-}
-
+// २. समरी र 'अन्तिम' रकम हिसाब गर्ने मुख्य सुधार
 function getSummary(name, cat, selectedDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
   let sawa = 0, accruedInterest = 0, count = 0, lastDateAD = "-", lastDateBS = "-", lastRate = 0, lastK = 0;
   const selDate = new Date(selectedDate);
+  
+  let allEntries = [];
 
+  // सबै सिटबाट सम्बन्धित नाम र प्रकारको डेटा जम्मा गर्ने
   sheets.forEach(sheet => {
     if(sheet.getName() === "Settings" || sheet.getName() === "सेटिङ") return;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
       if (data[i][2] === cat && data[i][3] === name) {
-        let rowDate = new Date(data[i][1]);
-        if (rowDate > selDate) continue;
-        
-        let currentRate = parseFloat(data[i][4]) || 0;
-        lastRate = currentRate;
-        
-        if (lastDateAD !== "-" && (cat === "ऋण" || cat === "व्यक्तिगत")) {
-          let days = Math.floor((rowDate - new Date(lastDateAD)) / (1000 * 60 * 60 * 24));
-          if (days > 0) accruedInterest += (sawa * (currentRate / 100) * days) / 365;
-        }
-        
-        let tS = parseFloat(data[i][5]) || 0, pK = parseFloat(data[i][6]) || 0, pB = parseFloat(data[i][7]) || 0;
-        
-        // अन्तिम कारोबार रकमको लजिक (तपाईंको माग अनुसार)
-        if (cat === "ऋण" || cat === "व्यक्तिगत") {
-          lastK = (pK > 0) ? pK : (pB > 0 ? pB : tS); // ऋणमा किस्ता, ब्याज वा थप सावाँ जुन पछिल्लो छ
-          sawa += tS; accruedInterest -= pB; sawa -= (pK - pB);
-        } else { 
-          lastK = pK; // संस्था/मर्मत/कर्मचारीमा पाएको वा दिएको रकम (Column G)
-          sawa += (tS - pK); 
-        }
-        
-        lastDateAD = data[i][1]; 
-        lastDateBS = data[i][0]; 
-        count++;
+        allEntries.push(data[i]);
       }
     }
   });
 
+  // मिति (AD) अनुसार सबै डेटालाई सानोदेखि ठूलो क्रममा मिलाउने
+  allEntries.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+
+  // क्रमबद्ध डेटामा मात्र लुप चलाउने
+  allEntries.forEach(row => {
+    let rowDate = new Date(row[1]);
+    if (rowDate > selDate) return; // छानिएको मिति भन्दा पछिको डेटा नलिने
+
+    let currentRate = parseFloat(row[4]) || 0;
+    lastRate = currentRate;
+    
+    if (lastDateAD !== "-" && (cat === "ऋण" || cat === "व्यक्तिगत")) {
+      let days = Math.floor((rowDate - new Date(lastDateAD)) / (1000 * 60 * 60 * 24));
+      if (days > 0) accruedInterest += (sawa * (currentRate / 100) * days) / 365;
+    }
+    
+    let tS = parseFloat(row[5]) || 0, pK = parseFloat(row[6]) || 0, pB = parseFloat(row[7]) || 0;
+
+    // मुख्य सुधार: 'अन्तिम' रकम (lastK) अपडेट गर्ने
+    // यदि व्यक्तिगत हो भने: सावाँ फिर्ता (pK) + ब्याज तिरेको (pB) को जोड
+    if (cat === "व्यक्तिगत") {
+      let totalPaidThisTime = pK + pB;
+      if(totalPaidThisTime > 0) lastK = totalPaidThisTime; 
+      
+      sawa += tS; 
+      accruedInterest -= pB; 
+      sawa -= pK; // व्यक्तिगतमा सावाँ फिर्ता नै सावाँ घट्ने आधार
+    } 
+    else if (cat === "ऋण") {
+      if(pK > 0) lastK = pK;
+      else if(tS > 0) lastK = tS;
+      
+      sawa += tS; 
+      accruedInterest -= pB; 
+      sawa -= (pK - pB); // ऋणमा किस्ताबाट ब्याज घटाएर सावाँ काटिन्छ
+    } 
+    else { 
+      lastK = pK > 0 ? pK : (tS > 0 ? tS : 0);
+      sawa += (tS - pK); 
+    }
+    
+    lastDateAD = row[1]; 
+    lastDateBS = row[0]; 
+    count++;
+  });
+
+  // अन्तिम मितिदेखि आजसम्मको ब्याज थप्ने
   if (lastDateAD !== "-" && (cat === "ऋण" || cat === "व्यक्तिगत")) {
     let finalDays = Math.floor((selDate - new Date(lastDateAD)) / (1000 * 60 * 60 * 24));
     if (finalDays > 0) accruedInterest += (sawa * (lastRate / 100) * finalDays) / 365;
@@ -119,6 +121,20 @@ function getSummary(name, cat, selectedDate) {
     rate: lastRate, 
     lastK: Math.round(lastK) 
   };
+}
+
+// बाँकी फङ्सनहरू (saveFile, formatMySheet, getSettings, updateSettings) पहिलाकै यथावत राख्नुहोला।
+
+function formatMySheet(sheet) {
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow === 0) return;
+  const range = sheet.getRange(1, 1, lastRow, lastCol);
+  range.setHorizontalAlignment("center").setVerticalAlignment("middle").setFontFamily("Mukta").setFontSize(10);
+  sheet.autoResizeColumns(1, lastCol);
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, lastCol).setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
+  }
 }
 
 function saveFile(obj) {
@@ -147,7 +163,5 @@ function updateSettings(k, v) {
   let found = false;
   for(let i=1; i<data.length; i++) { if(data[i][0] == k) { sSheet.getRange(i+1, 2).setValue(v); found = true; break; } }
   if(!found) { sSheet.appendRow([k, v]); }
-  sSheet.getRange(1, 1, 1, 2).setValues([["Key", "Value"]]);
-  formatMySheet(sSheet);
   return "SUCCESS";
 }
