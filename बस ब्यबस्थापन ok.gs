@@ -1,15 +1,14 @@
 /**
- * बस व्यवस्थापन प्रणाली - Code.gs (Final Refined Logic)
+ * बस व्यवस्थापन प्रणाली - FULL PRO VERSION
  */
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('बस व्यवस्थापन प्रणाली')
+    .setTitle('बस व्यवस्थापन प्रणाली PRO')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// १. डेटा सेभ गर्दा मिति अनुसार क्रमबद्ध गर्ने
 function processEntry(obj) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetName = obj.sheetYearMonth; 
@@ -19,6 +18,7 @@ function processEntry(obj) {
     sheet = ss.insertSheet(sheetName);
     const headers = ["मिति (BS)", "मिति (AD)", "प्रकार", "नाम", "ब्याज दर %", "थप सावाँ/बिल", "किस्ता/भुक्तानी", "तिरेको ब्याज", "बाँकी मौज्दात", "कैफियत", "फोटो"];
     sheet.appendRow(headers);
+    sheet.getRange(1, 1, 1, headers.length).setBackground("#ffb400").setFontWeight("bold");
   }
 
   const photoStatus = obj.imageBlob ? saveFile(obj) : "फोटो छैन";
@@ -29,7 +29,6 @@ function processEntry(obj) {
     obj.totalAmt, obj.remarks, photoStatus
   ]);
 
-  // मिति (AD - Column B) अनुसार Sort गर्ने ताकि हिसाब नबिग्रियोस्
   const lastRow = sheet.getLastRow();
   if (lastRow > 1) {
     const range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
@@ -40,7 +39,6 @@ function processEntry(obj) {
   return "SUCCESS";
 }
 
-// २. समरी र 'अन्तिम' रकम हिसाब गर्ने मुख्य सुधार
 function getSummary(name, cat, selectedDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
@@ -48,93 +46,86 @@ function getSummary(name, cat, selectedDate) {
   const selDate = new Date(selectedDate);
   
   let allEntries = [];
-
-  // सबै सिटबाट सम्बन्धित नाम र प्रकारको डेटा जम्मा गर्ने
   sheets.forEach(sheet => {
-    if(sheet.getName() === "Settings" || sheet.getName() === "सेटिङ") return;
+    if(["Settings", "सेटिङ", "Reminders"].includes(sheet.getName())) return;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
-      if (data[i][2] === cat && data[i][3] === name) {
+      if (data[i][2] === cat && data[i][3].includes(name)) {
         allEntries.push(data[i]);
       }
     }
   });
 
-  // मिति (AD) अनुसार सबै डेटालाई सानोदेखि ठूलो क्रममा मिलाउने
   allEntries.sort((a, b) => new Date(a[1]) - new Date(b[1]));
 
-  // क्रमबद्ध डेटामा मात्र लुप चलाउने
   allEntries.forEach(row => {
     let rowDate = new Date(row[1]);
-    if (rowDate > selDate) return; // छानिएको मिति भन्दा पछिको डेटा नलिने
-
+    if (rowDate > selDate) return;
     let currentRate = parseFloat(row[4]) || 0;
     lastRate = currentRate;
-    
     if (lastDateAD !== "-" && (cat === "ऋण" || cat === "व्यक्तिगत")) {
       let days = Math.floor((rowDate - new Date(lastDateAD)) / (1000 * 60 * 60 * 24));
       if (days > 0) accruedInterest += (sawa * (currentRate / 100) * days) / 365;
     }
-    
     let tS = parseFloat(row[5]) || 0, pK = parseFloat(row[6]) || 0, pB = parseFloat(row[7]) || 0;
-
-    // मुख्य सुधार: 'अन्तिम' रकम (lastK) अपडेट गर्ने
-    // यदि व्यक्तिगत हो भने: सावाँ फिर्ता (pK) + ब्याज तिरेको (pB) को जोड
     if (cat === "व्यक्तिगत") {
       let totalPaidThisTime = pK + pB;
       if(totalPaidThisTime > 0) lastK = totalPaidThisTime; 
-      
-      sawa += tS; 
-      accruedInterest -= pB; 
-      sawa -= pK; // व्यक्तिगतमा सावाँ फिर्ता नै सावाँ घट्ने आधार
-    } 
-    else if (cat === "ऋण") {
-      if(pK > 0) lastK = pK;
-      else if(tS > 0) lastK = tS;
-      
-      sawa += tS; 
-      accruedInterest -= pB; 
-      sawa -= (pK - pB); // ऋणमा किस्ताबाट ब्याज घटाएर सावाँ काटिन्छ
-    } 
-    else { 
+      sawa += tS; accruedInterest -= pB; sawa -= pK; 
+    } else if (cat === "ऋण") {
+      if(pK > 0) lastK = pK; else if(tS > 0) lastK = tS;
+      sawa += tS; accruedInterest -= pB; sawa -= (pK - pB);
+    } else { 
       lastK = pK > 0 ? pK : (tS > 0 ? tS : 0);
       sawa += (tS - pK); 
     }
-    
-    lastDateAD = row[1]; 
-    lastDateBS = row[0]; 
-    count++;
+    lastDateAD = row[1]; lastDateBS = row[0]; count++;
   });
 
-  // अन्तिम मितिदेखि आजसम्मको ब्याज थप्ने
   if (lastDateAD !== "-" && (cat === "ऋण" || cat === "व्यक्तिगत")) {
     let finalDays = Math.floor((selDate - new Date(lastDateAD)) / (1000 * 60 * 60 * 24));
     if (finalDays > 0) accruedInterest += (sawa * (lastRate / 100) * finalDays) / 365;
   }
 
-  return { 
-    sawa: Math.round(sawa), 
-    accruedInterest: Math.round(accruedInterest), 
-    total: Math.round(sawa + accruedInterest), 
-    count: count, 
-    lastDate: lastDateBS, 
-    rate: lastRate, 
-    lastK: Math.round(lastK) 
-  };
+  return { sawa: Math.round(sawa), accruedInterest: Math.round(accruedInterest), total: Math.round(sawa + accruedInterest), count: count, lastDate: lastDateBS, rate: lastRate, lastK: Math.round(lastK) };
 }
 
-// बाँकी फङ्सनहरू (saveFile, formatMySheet, getSettings, updateSettings) पहिलाकै यथावत राख्नुहोला।
+function getDashboardData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+  let income = 0, expense = 0, loan = 0;
+  sheets.forEach(s => {
+    if(["Settings", "सेटिङ", "Reminders"].includes(s.getName())) return;
+    const data = s.getDataRange().getValues();
+    for(let i=1; i<data.length; i++) {
+      let cat = data[i][2], tS = parseFloat(data[i][5]) || 0, pK = parseFloat(data[i][6]) || 0;
+      if(cat === "ऋण") loan += (tS - pK);
+      if(cat === "मर्मत" || cat === "कर्मचारी") expense += pK;
+      if(cat === "संस्था" || cat === "व्यक्तिगत") income += pK;
+    }
+  });
+  return { income: Math.round(income), expense: Math.round(expense), loan: Math.round(loan) };
+}
+
+function getReminders() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let rSheet = ss.getSheetByName("Reminders") || ss.insertSheet("Reminders");
+  const data = rSheet.getDataRange().getValues();
+  const today = new Date();
+  let alerts = [];
+  for(let i=1; i<data.length; i++) {
+    if(!data[i][1]) continue;
+    let diff = Math.ceil((new Date(data[i][1]) - today) / 86400000);
+    if(diff <= 20) alerts.push({ title: data[i][0], days: diff });
+  }
+  return alerts;
+}
 
 function formatMySheet(sheet) {
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
-  if (lastRow === 0) return;
-  const range = sheet.getRange(1, 1, lastRow, lastCol);
-  range.setHorizontalAlignment("center").setVerticalAlignment("middle").setFontFamily("Mukta").setFontSize(10);
+  sheet.getRange(1, 1, lastRow, lastCol).setHorizontalAlignment("center").setVerticalAlignment("middle").setFontFamily("Mukta").setFontSize(10).setWrap(false);
   sheet.autoResizeColumns(1, lastCol);
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, lastCol).setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
-  }
 }
 
 function saveFile(obj) {
