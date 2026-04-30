@@ -5,51 +5,64 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&display=swap');
-    :root { --bg: #070a13; --theme: #ffb400; --card: #1e293b; --text: #ffffff; --input: #000; --danger: #ff3131; --success: #00ff66; }
+    :root { --bg: #070a13; --theme: #ffb400; --card: #1e293b; --text: #ffffff; --input: #000; --danger: #ff3131; --success: #00ff66; --blue: #0088ff; }
     * { margin:0; padding:0; box-sizing:border-box; font-family: 'Mukta', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 5px; }
-    .app { width: 100%; border: 3px solid var(--theme); border-radius: 15px; padding: 10px; background: #0f172a; min-height: 98vh; position: relative; }
-    .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px; border-bottom: 2px solid var(--theme); }
-    .logo-area { display: flex; align-items: center; gap: 8px; color: var(--theme); font-weight: 800; font-size: 20px; }
-    .date-section { background: #000; border-radius: 10px; padding: 4px; text-align: center; border: 1px solid var(--theme); margin-top: 5px; }
-    .nep-date { font-size: 19px; font-weight: 800; color: #00fffc; } 
-    .loan-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 5px 0; }
-    .dash-box { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 4px 2px; text-align: center; }
-    .dash-box span { font-size: 10px; color: #94a3b8; font-weight: 700; display: block; }
-    .dash-box b { font-size: 15px; color: #fff; font-weight: 800; }
-    .status-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 5px 0; }
-    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 6px 2px; border-radius: 8px; font-weight: 800; font-size: 17px; border: 1px solid #fff; }
-    .blue-bar { background: #0056b3; color: #fff; text-align: center; padding: 6px 2px; border-radius: 8px; font-weight: 800; font-size: 17px; border: 1px solid #fff; }
-    label { font-size: 15px; color: var(--theme); margin-left: 5px; font-weight: 800; display: block; margin-top: 2px; }
-    input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 8px; padding: 0 10px; height: 42px; color: #00ff66; font-size: 19px; font-weight: 800; outline: none; }
-    .btn-save { width: 100%; background: var(--success); color: #000; border: none; padding: 10px; border-radius: 12px; font-size: 20px; font-weight: 900; margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .app { width: 100%; border: 3px solid var(--theme); border-radius: 15px; padding: 10px; background: #0f172a; min-height: 98vh; }
     
-    #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
-    .loader { border: 6px solid #f3f3f3; border-top: 6px solid var(--theme); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
-    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; padding:15px; overflow-y: auto; }
-    .modal-content { background: var(--card); border-radius: 20px; border: 3px solid var(--theme); padding: 20px; }
-    
-    .camera-btn { width: 45px; height: 45px; background: #000; border: 1px solid var(--theme); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-top: 22px; }
+    .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 8px; }
+    .stat-card { background: var(--card); border-bottom: 3px solid var(--theme); padding: 5px; border-radius: 8px; text-align:center; }
+    .stat-card small { font-size: 10px; color: #94a3b8; display: block; }
+    .stat-card b { font-size: 14px; color: #fff; }
 
-    .date-control { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
-    .btn-circle { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 20px; font-weight: 800; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; }
-    .btn-minus { background: var(--danger); }
-    .btn-plus { background: var(--success); color: #000; }
+    .alert-box { background: #450a0a; border: 1px solid var(--danger); color: #fca5a5; padding: 6px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; display:none; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--theme); }
+    .logo-area { display: flex; align-items: center; gap: 8px; color: var(--theme); font-weight: 800; font-size: 18px; }
+    
+    .date-section { background: #000; border-radius: 10px; padding: 4px; text-align: center; border: 1px solid var(--theme); margin: 5px 0; }
+    .nep-date { font-size: 18px; font-weight: 800; color: #00fffc; } 
+
+    .loan-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 5px 0; }
+    .dash-box { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 4px; text-align: center; }
+    .dash-box span { font-size: 10px; color: #94a3b8; display: block; }
+    .dash-box b { font-size: 14px; color: #fff; }
+
+    .status-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 5px 0; }
+    .red-bar { background: var(--danger); color: #fff; text-align: center; padding: 6px; border-radius: 8px; font-weight: 800; font-size: 17px; }
+    .blue-bar { background: var(--blue); color: #fff; text-align: center; padding: 6px; border-radius: 8px; font-weight: 800; font-size: 17px; }
+
+    label { font-size: 14px; color: var(--theme); font-weight: 800; display: block; margin-top: 5px; }
+    input, select { width: 100%; background: var(--input); border: 2px solid #64748b; border-radius: 8px; padding: 0 10px; height: 42px; color: var(--success); font-size: 19px; font-weight: 800; outline: none; }
+    
+    .btn-save { width: 100%; background: var(--success); color: #000; border: none; padding: 12px; border-radius: 12px; font-size: 18px; font-weight: 900; margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .whatsapp-btn { width: 100%; background: #25d366; color: #000; border: none; padding: 10px; border-radius: 10px; font-size: 17px; font-weight: 800; margin-top: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; }
+
+    #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
+    .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--theme); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; padding:15px; }
+    .modal-content { background: var(--card); border-radius: 15px; border: 2px solid var(--theme); padding: 15px; height: 100%; overflow-y: auto; }
+    .camera-btn { width: 45px; height: 45px; background: #000; border: 1px solid var(--theme); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-top: 24px; }
   </style>
 </head>
 <body>
 
-<div id="overlay">
-  <div class="loader" id="loaderCircle"></div>
-  <h2 id="statusMsg" style="color:var(--theme); margin-top:15px; text-align:center;">प्रक्रिया हुँदैछ...</h2>
-</div>
+<div id="overlay"><div class="loader"></div><h2 id="statusMsg" style="color:var(--theme); margin-top:15px;">प्रक्रिया हुँदैछ...</h2></div>
 
 <div class="app">
+  <div class="dashboard">
+    <div class="stat-card"><small>आम्दानी</small><b id="dIn">०</b></div>
+    <div class="stat-card"><small>खर्च</small><b id="dEx" style="color:var(--danger);">०</b></div>
+    <div class="stat-card"><small>कुल बाँकी</small><b id="dLo" style="color:var(--theme);">०</b></div>
+  </div>
+
+  <div id="reminderAlert" class="alert-box"></div>
+
   <div class="header">
-    <div class="logo-area"><i class="fas fa-bus-alt"></i> <b>बस व्यवस्थापन</b></div>
-    <i class="fas fa-cog" style="color:var(--theme); font-size: 24px; cursor:pointer;" onclick="openMenu()"></i>
+    <div class="logo-area"><i class="fas fa-bus-alt"></i> <b>बस व्यवस्थापन PRO</b></div>
+    <i class="fas fa-cog" style="color:var(--theme); font-size: 22px;" onclick="openMenu()"></i>
   </div>
 
   <div class="date-section"><div id="dispNep" class="nep-date">लोड हुँदै...</div></div>
@@ -57,9 +70,6 @@
   <div id="lDash" style="display:none;">
     <div class="loan-dash">
       <div class="dash-box"><span>अन्तिम मिति</span><b id="oDate">-</b></div>
-      <div class="dash-box"><span>कारोबार</span><b id="oCount">०</b></div>
-      <div class="dash-box"><span>पुरानो सावाँ</span><b id="oSaw">०</b></div>
-      <div class="dash-box"><span>अन्तिम कारोबार</span><b id="lastK">०</b></div>
       <div class="dash-box"><span>बाँकी ब्याज</span><b id="tByaj" style="color:var(--success);">०</b></div>
       <div class="dash-box"><span>कुल बाँकी</span><b id="oTotal" style="color:var(--theme);">०</b></div>
     </div>
@@ -79,62 +89,64 @@
           <option value="मर्मत">🛠️ मर्मत</option>
           <option value="कर्मचारी">👨‍✈️ कर्मचारी</option>
           <option value="व्यक्तिगत">👤 व्यक्तिगत</option>
+          <option value="दाजुभाइ">🤝 दाजुभाइ</option>
         </select>
       </div>
       <div><label>मिति (AD)</label><input type="date" id="eD" onchange="updateDate(); sum();"></div>
     </div>
     
-    <label>नाम छान्नुहोस्</label>
-    <select id="tN" onchange="sum()"></select>
+    <div id="nameArea">
+       <div id="boxP1"><label id="labelP1">नाम छान्नुहोस्</label><select id="tN" onchange="sum()"></select></div>
+       <div id="boxP2" style="display:none;"><label>पाउने व्यक्ति</label><input type="text" id="tN2" placeholder="नाम लेख्नुहोस्"></div>
+    </div>
 
     <div id="loanUI" style="display:none; margin-top:5px; border:1px solid var(--theme); padding:8px; border-radius:10px;">
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-        <div><label>सावाँ फिर्ता (-)</label><input type="number" id="pS" oninput="manualCalc()" value="0"></div>
         <div><label>थप सावाँ (+)</label><input type="number" id="aS" oninput="manualCalc()" value="0"></div>
+        <div><label>सावाँ फिर्ता (-)</label><input type="number" id="pS" oninput="manualCalc()" value="0"></div>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
-        <div><label id="kistaLabel">किस्ता अटो</label><input type="number" id="curKista" oninput="loanAutoSplit()" value="0" style="color:#ffb400"></div>
+        <div><label>आजको किस्ता</label><input type="number" id="curKista" oninput="loanAutoSplit()" value="0" style="color:var(--theme)"></div>
         <div><label>ब्याज तिरेको</label><input type="number" id="pB" oninput="manualCalc()" value="0"></div>
-        <div><label>दर %</label><input type="number" id="r" oninput="manualCalc()" value="0"></div>
+        <div><label>ब्याज दर %</label><input type="number" id="r" oninput="manualCalc()" value="0"></div>
       </div>
     </div>
 
     <div id="billUI" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-      <div><label id="billAddLabel">पाउनु पर्ने (+)</label><input type="number" id="bA" value="0" oninput="manualCalc()"></div>
-      <div><label id="billPaidLabel">पाएको (-)</label><input type="number" id="pA" value="0" oninput="manualCalc()"></div>
+      <div><label id="bAddL">पाउनु पर्ने (+)</label><input type="number" id="bA" value="0" oninput="manualCalc()"></div>
+      <div><label id="bPaidL">पाएको (-)</label><input type="number" id="pA" value="0" oninput="manualCalc()"></div>
     </div>
 
-    <div style="display:flex; gap:8px; align-items:center;">
+    <div style="display:flex; gap:8px;">
       <div style="flex:1;"><label>कैफियत</label><input type="text" id="remk" placeholder="विवरण..."></div>
       <div class="camera-btn" onclick="document.getElementById('fileInp').click()">
-        <i class="fas fa-camera" style="color:var(--theme); font-size: 20px;"></i>
+        <i class="fas fa-camera" style="color:var(--theme);"></i>
         <img id="imgPrev" style="display:none; width:100%; height:100%; object-fit:cover; position:absolute; border-radius:8px;">
       </div>
       <input type="file" id="fileInp" accept="image/*" style="display:none;" onchange="previewFile()">
     </div>
-    <button type="button" class="btn-save" id="saveBtn" onclick="save()">
-      <i class="fas fa-save"></i> सुरक्षित गर्नुहोस्
-    </button>
+
+    <button type="button" class="btn-save" id="saveBtn" onclick="save()"><i class="fas fa-save"></i> सुरक्षित गर्नुहोस्</button>
+    <button type="button" id="waBtn" class="whatsapp-btn" onclick="sendWA()"><i class="fab fa-whatsapp"></i> रसिद पठाउनुहोस्</button>
   </form>
 </div>
 
 <div id="mMenu" class="modal">
   <div class="modal-content">
-    <h2 style="color:var(--theme); border-bottom:2px solid var(--theme); margin-bottom:10px; text-align:center;">सेटिङ मिलाउनुस्</h2>
-    <div class="date-control">
-      <button class="btn-circle btn-minus" onclick="adjDate(-1)">-</button>
-      <div id="dateOffDisp" class="date-val" style="font-size:24px; font-weight:800;">0</div>
-      <button class="btn-circle btn-plus" onclick="adjDate(1)">+</button>
+    <h3 style="color:var(--theme);">सेटिङ</h3>
+    <label>मिति एड्जस्ट</label>
+    <div style="display:flex; align-items:center; gap:20px; margin:10px 0;">
+      <button onclick="adjDate(-1)" style="padding:10px 20px; background:var(--danger);">-</button>
+      <b id="dateOffDisp">0</b>
+      <button onclick="adjDate(1)" style="padding:10px 20px; background:var(--success);">+</button>
     </div>
     <label>संस्था</label><input type="text" id="sInst">
     <label>ऋण</label><input type="text" id="sLoan">
     <label>व्यक्तिगत</label><input type="text" id="sPers">
     <label>कर्मचारी</label><input type="text" id="sStaff">
     <label>मर्मत</label><input type="text" id="sRepair">
-    <button onclick="saveSettings()" style="background:var(--success); width:100%; padding:12px; margin-top:20px; font-weight:800; border-radius:10px; border:none; cursor:pointer;">
-      <i class="fas fa-check-circle"></i> सेभ गर्नुहोस्
-    </button>
-    <button onclick="closeModal('mMenu')" style="background:var(--danger); width:100%; padding:10px; margin-top:10px; color:#fff; border-radius:10px; font-weight:800; border:none; cursor:pointer;">बन्द</button>
+    <button onclick="saveSettings()" style="background:var(--success); width:100%; padding:12px; margin-top:15px;">सेभ गर्नुहोस्</button>
+    <button onclick="closeModal('mMenu')" style="background:var(--danger); width:100%; padding:10px; margin-top:10px;">बन्द</button>
   </div>
 </div>
 
@@ -149,21 +161,18 @@
   
   function updateDate() {
     let d = document.getElementById('eD').value ? new Date(document.getElementById('eD').value) : new Date();
-    let baseDate = new Date("2024-04-13");
-    let diff = Math.floor((d - baseDate) / 86400000); 
-    let todayGate = 1 + diff + (parseInt(cfg.dateOff) || 0);
-    let currY = 2081, currM = 0;
-    while(todayGate > bsData[currY][currM]) { todayGate -= bsData[currY][currM]; currM++; if(currM > 11){ currM=0; currY++; } }
-    while(todayGate <= 0) { currM--; if(currM < 0){ currM=11; currY--; } todayGate += bsData[currY][currM]; }
-    globalSheetName = toN(currY % 100).padStart(2, '०') + nM[currM];
-    document.getElementById('dispNep').innerText = toN(currY) + " " + nM[currM] + " " + toN(todayGate) + " " + nB[d.getDay()];
+    let diff = Math.floor((d - new Date("2024-04-13")) / 86400000); 
+    let tg = 1 + diff + (parseInt(cfg.dateOff) || 0);
+    let cy = 2081, cm = 0;
+    while(tg > bsData[cy][cm]) { tg -= bsData[cy][cm]; cm++; if(cm>11){cm=0; cy++;} }
+    while(tg <= 0) { cm--; if(cm<0){cm=11; cy--;} tg += bsData[cy][cm]; }
+    globalSheetName = toN(cy % 100).padStart(2, '०') + nM[cm];
+    document.getElementById('dispNep').innerText = toN(cy) + " " + nM[cm] + " " + toN(tg) + " " + nB[d.getDay()];
   }
 
   function adjDate(v) {
-    let cur = parseInt(document.getElementById('dateOffDisp').innerText);
-    cur += v;
-    document.getElementById('dateOffDisp').innerText = cur;
-    updateDate();
+    let c = parseInt(document.getElementById('dateOffDisp').innerText) + v;
+    document.getElementById('dateOffDisp').innerText = c; updateDate();
   }
 
   function ui() {
@@ -173,24 +182,19 @@
     document.getElementById('lDash').style.display = isL ? 'block' : 'none';
     document.getElementById('billUI').style.display = isL ? 'none' : 'grid';
     
-    if(cat === 'कर्मचारी' || cat === 'मर्मत') {
-      document.getElementById('billAddLabel').innerText = "दिनु पर्ने (+)";
-      document.getElementById('billPaidLabel').innerText = "दिएको (-)";
+    if(cat === 'दाजुभाइ') {
+      document.getElementById('boxP2').style.display = "block";
+      document.getElementById('tN').innerHTML = '<option value="रोहित">रोहित</option><option value="कुमार">कुमार</option>';
     } else {
-      document.getElementById('billAddLabel').innerText = "पाउनु पर्ने (+)";
-      document.getElementById('billPaidLabel').innerText = "पाएको (-)";
+      document.getElementById('boxP2').style.display = "none";
+      let key = {'संस्था':'sInst','ऋण':'sLoan','मर्मत':'sRepair','कर्मचारी':'sStaff','व्यक्तिगत':'sPers'}[cat];
+      let items = cfg[key] ? cfg[key].split(',').filter(x=>x.trim()) : [];
+      document.getElementById('tN').innerHTML = items.map(x => `<option value="${x}">${x}</option>`).join('');
     }
-    document.getElementById('kistaLabel').innerText = (cat === 'ऋण') ? "किस्ता अटो" : "किस्ता";
-    
-    let key = { 'संस्था':'sInst', 'ऋण':'sLoan', 'मर्मत':'sRepair', 'कर्मचारी':'sStaff', 'व्यक्तिगत':'sPers' }[cat];
-    let items = cfg[key] ? cfg[key].split(',').filter(x=>x.trim()) : [];
-    document.getElementById('tN').innerHTML = items.map(x => `<option value="${x}">${x}</option>`).join('');
     sum();
   }
 
   function loanAutoSplit() {
-    let cat = document.getElementById('cat').value;
-    if(cat !== 'ऋण') { manualCalc(); return; }
     let k = parseFloat(document.getElementById('curKista').value) || 0;
     let i = (k <= oldInterest) ? k : oldInterest;
     let s = (k > oldInterest) ? (k - oldInterest) : 0;
@@ -212,11 +216,8 @@
     if(!name) return;
     google.script.run.withSuccessHandler(r => {
       document.getElementById('oDate').innerText = r.lastDate;
-      document.getElementById('oCount').innerText = toN(r.count);
-      document.getElementById('oSaw').innerText = toN(r.sawa);
       document.getElementById('tByaj').innerText = toN(r.accruedInterest);
       document.getElementById('oTotal').innerText = toN(r.total);
-      document.getElementById('lastK').innerText = toN(r.lastK);
       document.getElementById('lastAmt').innerText = toN(r.lastK);
       document.getElementById('r').value = r.rate || 0;
       oldSawa = r.sawa; oldInterest = r.accruedInterest; serverTotal = r.total;
@@ -225,74 +226,57 @@
   }
 
   function save() {
-    const btn = document.getElementById('saveBtn'); btn.disabled = true;
     document.getElementById('overlay').style.display = 'flex';
     let engB = document.getElementById('hBal').innerText.replace(/[^०-९]/g, '').split('').map(c => nD.indexOf(c)).join('');
-    let cat = document.getElementById('cat').value;
-    
+    let cat = document.getElementById('cat').value, fullName = document.getElementById('tN').value;
+    if(cat === 'दाजुभाइ') fullName += " -> " + document.getElementById('tN2').value;
+
     let obj = {
       sheetYearMonth: globalSheetName, nepDate: document.getElementById('dispNep').innerText, engDate: document.getElementById('eD').value,
-      cat: cat, name: document.getElementById('tN').value, rate: document.getElementById('r').value,
+      cat: cat, name: fullName, rate: document.getElementById('r').value,
       addSawa_or_Bill: (cat === 'ऋण' || cat === 'व्यक्तिगत') ? document.getElementById('aS').value : document.getElementById('bA').value,
       paidKista_or_Pay: (cat === 'ऋण' || cat === 'व्यक्तिगत') ? document.getElementById('pS').value : document.getElementById('pA').value,
-      paidByaj: document.getElementById('pB').value, totalAmt: engB, remarks: document.getElementById('remk').value, imageBlob: imgBase64
+      paidByaj: document.getElementById('pB').value || 0, totalAmt: engB, remarks: document.getElementById('remk').value, imageBlob: imgBase64
     };
 
     google.script.run.withSuccessHandler(() => {
-      document.getElementById('loaderCircle').style.display = 'none';
-      document.getElementById('statusMsg').innerHTML = '✅ सफलतापूर्वक सुरक्षित भयो!';
-      
-      // सुधार: ३ सेकेन्डपछि पेज रिफ्रेस नगरी डाटा मात्र रिसेट गर्ने
+      document.getElementById('waBtn').style.display = 'flex';
+      refreshDash(); 
       setTimeout(() => { 
+        document.getElementById('overlay').style.display = 'none'; 
         dataReset(); 
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('statusMsg').innerText = 'प्रक्रिया हुँदैछ...';
-        document.getElementById('loaderCircle').style.display = 'block';
-        btn.disabled = false;
-      }, 3000);
-      
+      }, 2000);
     }).processEntry(obj);
   }
 
-  // नयाँ डाटा रिसेट फङ्सन (पेज रिफ्रेस नहुने)
+  function sendWA() {
+    let name = document.getElementById('tN').value, bal = document.getElementById('hBal').innerText;
+    let paid = (document.getElementById('cat').value === 'ऋण' || document.getElementById('cat').value === 'व्यक्तिगत') ? (parseFloat(document.getElementById('pS').value)+parseFloat(document.getElementById('pB').value)) : document.getElementById('pA').value;
+    let msg = `*बस व्यवस्थापन रसिद*%0Aनाम: ${name}%0Aप्राप्त: रू. ${paid}%0Aबाँकी: रू. ${bal}%0Aमिति: ${document.getElementById('dispNep').innerText}`;
+    window.open(`https://wa.me/+9779852030136?text=${msg}`, '_blank');
+  }
+
+  function refreshDash() {
+    google.script.run.withSuccessHandler(d => {
+      document.getElementById('dIn').innerText = toN(d.income);
+      document.getElementById('dEx').innerText = toN(d.expense);
+      document.getElementById('dLo').innerText = toN(d.loan);
+    }).getDashboardData();
+  }
+
+  function checkReminders() {
+    google.script.run.withSuccessHandler(alerts => {
+      if(alerts.length > 0) {
+        document.getElementById('reminderAlert').style.display = 'block';
+        document.getElementById('reminderAlert').innerHTML = alerts.map(a => `<i class="fas fa-bell"></i> ${a.title} (${a.days} दिन बाँकी)`).join('<br>');
+      }
+    }).getReminders();
+  }
+
   function dataReset() {
-    // इनपुट फिल्डहरू ० बनाउने
-    document.getElementById('pS').value = 0;
-    document.getElementById('aS').value = 0;
-    document.getElementById('curKista').value = 0;
-    document.getElementById('pB').value = 0;
-    document.getElementById('bA').value = 0;
-    document.getElementById('pA').value = 0;
-    document.getElementById('remk').value = "";
-    document.getElementById('imgPrev').style.display = 'none';
-    imgBase64 = "";
-    
-    // समरी अपडेट गर्ने (ताकि सिटमा गएको नयाँ डाटा यहाँ देखियोस्)
-    sum();
-  }
-
-  function openMenu() {
-    document.getElementById('dateOffDisp').innerText = cfg.dateOff || 0;
-    document.getElementById('sInst').value = cfg.sInst || "";
-    document.getElementById('sLoan').value = cfg.sLoan || "";
-    document.getElementById('sPers').value = cfg.sPers || "";
-    document.getElementById('sStaff').value = cfg.sStaff || "";
-    document.getElementById('sRepair').value = cfg.sRepair || "";
-    document.getElementById('mMenu').style.display = 'block';
-  }
-
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-  function saveSettings() {
-    let s = {
-      dateOff: document.getElementById('dateOffDisp').innerText,
-      sInst: document.getElementById('sInst').value, sLoan: document.getElementById('sLoan').value,
-      sPers: document.getElementById('sPers').value, sStaff: document.getElementById('sStaff').value,
-      sRepair: document.getElementById('sRepair').value
-    };
-    Object.keys(s).forEach(k => google.script.run.updateSettings(k, s[k]));
-    alert("सेटिङ सुरक्षित भयो!");
-    location.reload();
+    ['aS','pS','curKista','pB','bA','pA'].forEach(id => document.getElementById(id).value = 0);
+    document.getElementById('remk').value = ""; document.getElementById('imgPrev').style.display = 'none';
+    imgBase64 = ""; sum();
   }
 
   function previewFile() {
@@ -302,12 +286,22 @@
     if (file) reader.readAsDataURL(file);
   }
 
+  function openMenu() {
+    document.getElementById('dateOffDisp').innerText = cfg.dateOff || 0;
+    ['sInst','sLoan','sPers','sStaff','sRepair'].forEach(id => document.getElementById(id).value = cfg[id] || "");
+    document.getElementById('mMenu').style.display = 'block';
+  }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function saveSettings() {
+    let s = { dateOff: document.getElementById('dateOffDisp').innerText, sInst: document.getElementById('sInst').value, sLoan: document.getElementById('sLoan').value, sPers: document.getElementById('sPers').value, sStaff: document.getElementById('sStaff').value, sRepair: document.getElementById('sRepair').value };
+    Object.keys(s).forEach(k => google.script.run.updateSettings(k, s[k]));
+    location.reload();
+  }
+
   window.onload = () => {
-    let now = new Date();
-    let offset = now.getTimezoneOffset() * 60000;
-    let localISODate = new Date(now - offset).toISOString().split('T')[0];
-    document.getElementById('eD').value = localISODate;
+    document.getElementById('eD').value = new Date().toISOString().split('T')[0];
     google.script.run.withSuccessHandler(r => { cfg = r; updateDate(); ui(); }).getSettings();
+    refreshDash(); checkReminders();
   };
 </script>
 </body>
