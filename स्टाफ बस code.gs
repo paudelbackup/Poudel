@@ -8,13 +8,14 @@ function doGet() {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// --- सेटिङ व्यवस्थापन (नचलाइएको) ---
+// --- सेटिङ व्यवस्थापन ("Add Setting" शीटमा बस्ने गरी) ---
 function getSettings() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet = ss.getSheetByName("Settings");
+  let sheet = ss.getSheetByName("Add Setting");
   if (!sheet) {
-    sheet = ss.insertSheet("Settings");
+    sheet = ss.insertSheet("Add Setting");
     sheet.appendRow(["busNumber", "driverName", "instName"]);
+    sheet.getRange(1,1,1,3).setFontWeight("bold").setBackground("#f3f3f3");
   }
   const data = sheet.getDataRange().getValues();
   const settings = { busNumber: [], driverName: [], instName: [] };
@@ -28,15 +29,16 @@ function getSettings() {
 
 function saveSettingToSheet(key, value) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName("Settings") || ss.insertSheet("Settings");
+  const sheet = ss.getSheetByName("Add Setting") || ss.insertSheet("Add Setting");
   const col = (key === 'busNumber') ? 1 : (key === 'driverName' ? 2 : 3);
-  sheet.getRange(sheet.getLastRow() + 1, col).setValue(value);
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow + 1, col).setValue(value);
   return "SAVED";
 }
 
 function removeSettingFromSheet(key, value) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName("Settings");
+  const sheet = ss.getSheetByName("Add Setting");
   if (!sheet) return;
   const col = (key === 'busNumber') ? 1 : (key === 'driverName' ? 2 : 3);
   const data = sheet.getRange(1, col, sheet.getLastRow()).getValues();
@@ -84,7 +86,7 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
-// --- मुख्य डेटा प्रशोधन (Alignment र Resize सुधारिएको) ---
+// --- मुख्य डेटा प्रशोधन (रेडियो बटन रङ लजिक थपिएको) ---
 function process(data, photoObj) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000); 
@@ -154,11 +156,15 @@ function process(data, photoObj) {
 
     sheet.appendRow(rowData);
     
-    // --- एलाइनमेन्ट र साइज मिलाउने ---
     const lastRow = sheet.getLastRow();
     const range = sheet.getRange(lastRow, 1, 1, 21);
     range.setHorizontalAlignment("center").setVerticalAlignment("middle");
     
+    // --- सुधार गरिएको भाग: संस्था/रुटमा रङ भर्ने (कोलम ५) ---
+    if (data.shiftColor) {
+      sheet.getRange(lastRow, 5).setFontColor(data.shiftColor).setFontWeight("bold");
+    }
+
     if (data.entryType === "Reserve") {
       range.setFontColor("#ff0000").setFontWeight("bold");
     }
