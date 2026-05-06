@@ -10,7 +10,23 @@
     :root { --bg: #020617; --accent: #22c55e; --panel: #1e293b; --text: #f8fafc; --blue: #38bdf8; }
     * { margin:0; padding:0; box-sizing:border-box; font-family: 'Mukta', sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 20px; }
-    .top-bar { display: flex; justify-content: space-between; padding: 15px; background: var(--panel); border-bottom: 2px solid var(--accent); position:sticky; top:0; z-index:100; }
+    
+    /* Top Bar र Shift Buttons सुधारिएको */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel); border-bottom: 2px solid var(--accent); position:sticky; top:0; z-index:100; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .shift-group { display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; }
+    .shift-btn { display: none; }
+    .shift-label { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.3s; position: relative; }
+    
+    /* रेडियो बटन कलर लजिक */
+    #sMorning + .shift-label { background: #ef4444; opacity: 0.4; } /* रातो - बिहान */
+    #sAfternoon + .shift-label { background: #eab308; opacity: 0.4; } /* पहेँलो - दिउँसो */
+    #sBoth + .shift-label { background: #22c55e; opacity: 0.4; } /* हरियो - दुवै */
+    
+    #sMorning:checked + .shift-label { opacity: 1; border-color: #fff; box-shadow: 0 0 8px #ef4444; }
+    #sAfternoon:checked + .shift-label { opacity: 1; border-color: #fff; box-shadow: 0 0 8px #eab308; }
+    #sBoth:checked + .shift-label { opacity: 1; border-color: #fff; box-shadow: 0 0 8px #22c55e; }
+
     .container { padding: 12px; max-width: 500px; margin: auto; }
     .tab-container { display: flex; gap: 8px; margin-bottom: 12px; }
     .tab { flex: 1; padding: 12px; text-align: center; background: var(--panel); border-radius: 10px; cursor: pointer; color: #94a3b8; font-weight: bold; }
@@ -32,7 +48,19 @@
 <body>
 
 <div class="top-bar">
-  <h2 style="color:var(--accent)">🚍 बस ब्यवस्थापन 🛠️</h2>
+  <div class="header-left">
+    <h2 style="color:var(--accent); font-size: 18px; margin:0;">🚍 बस ब्यवस्थापन</h2>
+    <div class="shift-group">
+      <input type="radio" name="shift" id="sMorning" value="Morning" class="shift-btn">
+      <label for="sMorning" class="shift-label" title="बिहान मात्र"></label>
+      
+      <input type="radio" name="shift" id="sAfternoon" value="Afternoon" class="shift-btn">
+      <label for="sAfternoon" class="shift-label" title="दिउँसो मात्र"></label>
+      
+      <input type="radio" name="shift" id="sBoth" value="Both" class="shift-btn" checked>
+      <label for="sBoth" class="shift-label" title="बिहान र दिउँसो दुवै"></label>
+    </div>
+  </div>
   <div onclick="toggleMenu()" style="cursor:pointer; font-size: 22px; color:var(--accent);"><i class="fas fa-cog"></i></div>
 </div>
 
@@ -266,6 +294,11 @@ function submitData() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> सेभ हुँदै...';
   const data = Object.fromEntries(new FormData(document.getElementById('busForm')).entries());
+  
+  // सिफ्टको रङ पठाउने
+  const shift = document.querySelector('input[name="shift"]:checked').value;
+  data.shiftColor = (shift === 'Morning') ? '#ef4444' : (shift === 'Afternoon' ? '#eab308' : '#22c55e');
+
   data.nepDateRaw = window.nepDateRaw;
   data.nepDay = window.nepDay;
   data.nepMonthName = window.nepMonthName;
