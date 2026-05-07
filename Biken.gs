@@ -1,3 +1,8 @@
+/**
+ * बस व्यवस्थापन प्रणाली - पूर्ण अपडेटेड Code.gs
+ * Spreadsheet ID: 1diMgxaMz8OS8Fm17W8QXz_FyTrXb61b-_cNcFxMr0xw
+ */
+
 const FOLDER_ID = "1pgnhX7iHuxAMiWviDe5m0Q2B0VoxQ8oe"; 
 const SPREADSHEET_ID = "1diMgxaMz8OS8Fm17W8QXz_FyTrXb61b-_cNcFxMr0xw";
 
@@ -8,6 +13,7 @@ function doGet() {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+// --- सेटिङ व्यवस्थापन ("Add Setting" शीटमा बस्ने गरी) ---
 function getSettings() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName("Add Setting");
@@ -49,6 +55,7 @@ function removeSettingFromSheet(key, value) {
   }
 }
 
+// --- गणना लजिक ---
 function toEngNum(n) {
   if (n === undefined || n === null || n === "") return "0";
   const nepDigits = {'०':'0','१':'1','२':'2','३':'3','४':'4','५':'5','६':'6','७':'7','८':'8','९':'9'};
@@ -84,6 +91,7 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
+// --- मुख्य डेटा प्रशोधन ---
 function process(data, photoObj) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000); 
@@ -91,17 +99,25 @@ function process(data, photoObj) {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheetName = "२०८३ " + data.nepMonthName;
     let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+    
+    // हेडर्स
     const headers = ["मिति (BS)", "बार", "मिति (AD)", "प्रकार", "संस्था/रुट", "बस नं", "ड्राइभर", "लिटर", "रेट", "डिजल रकम", "आजको KM", "चलेको KM", "रिजर्भ रकम", "बैना/खर्च", "बचत", "कुल डिजल लिटर", "कुल डिजल रकम", "कुल रिजर्भ बचत", "विवरण", "फोटो", "KEY"];
     
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#6366f1").setFontColor("white").setHorizontalAlignment("center").setVerticalAlignment("middle");
+      sheet.getRange(1, 1, 1, headers.length)
+           .setFontWeight("bold")
+           .setBackground("#6366f1") // Indigo Background
+           .setFontColor("white")
+           .setHorizontalAlignment("center")
+           .setVerticalAlignment("middle");
       sheet.setFrozenRows(1);
     }
 
     const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
     const currentKey = (data.nepDateRaw + "|" + instOrRoute + "|" + data.busNumber).toString().trim();
     
+    // डुप्लिकेट चेक (Institution को लागि मात्र)
     if (data.entryType === "Institution") {
       const lastRow = sheet.getLastRow();
       if (lastRow > 1) {
@@ -112,6 +128,7 @@ function process(data, photoObj) {
       }
     }
 
+    // फोटो अपलोड
     let photoLink = "फोटो छैन";
     if (photoObj && photoObj.base64) {
       const folder = DriveApp.getFolderById(FOLDER_ID);
@@ -119,10 +136,12 @@ function process(data, photoObj) {
       photoLink = '=HYPERLINK("' + folder.createFile(blob).getUrl() + '", "फोटो हेर्नुहोस्")';
     }
 
+    // किलोमिटर गणना
     const lastKMVal = getLastKM(data.busNumber, data.nepMonthName);
     const todayKMInput = parseFloat(toEngNum(data.currentKM)) || 0;
     let drivenKM = (lastKMVal > 0 && todayKMInput > lastKMVal) ? (todayKMInput - lastKMVal) : 0;
 
+    // रनिङ टोटल गणना (Diesel & Reserve Balance)
     let runningDieselLiter = (parseFloat(toEngNum(data.dLiter)) || 0);
     let runningDieselAmount = (parseFloat(toEngNum(data.dAmount)) || 0);
     let runningReserveBalance = (data.entryType === "Reserve") ? (parseFloat(toEngNum(data.balance)) || 0) : 0;
@@ -139,6 +158,7 @@ function process(data, photoObj) {
       }
     }
 
+    // डेटा पङ्क्ति (Row)
     const rowData = [
       toNepNum(data.nepDateRaw), data.nepDay, data.engDate, 
       (data.entryType === "Institution" ? "संस्था" : "रिजर्भ"),
@@ -153,19 +173,27 @@ function process(data, photoObj) {
 
     sheet.appendRow(rowData);
     
+    // फर्म्याटिङ
     const lastRow = sheet.getLastRow();
     const range = sheet.getRange(lastRow, 1, 1, 21);
     range.setHorizontalAlignment("center").setVerticalAlignment("middle");
     
+    // सिफ्ट अनुसार कोलम ५ (संस्था/रुट) मा कलर
     if (data.shiftColor) {
       sheet.getRange(lastRow, 5).setFontColor(data.shiftColor).setFontWeight("bold");
     }
 
+    // रिजर्भ हो भने पूरै लाइन कलर गर्ने
     if (data.entryType === "Reserve") {
-      range.setFontColor("#f43f5e").setFontWeight("bold");
+      range.setFontColor("#f43f5e").setFontWeight("bold"); // Rose/Red Color
     }
 
     sheet.autoResizeColumns(1, 21);
+    // कोलम अझ प्रस्ट पार्न थप स्पेस
+    for(let i=1; i<=21; i++) {
+       sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 15);
+    }
+
     return "SUCCESS";
   } catch (e) { return "Error: " + e.toString(); }
   finally { lock.releaseLock(); }
