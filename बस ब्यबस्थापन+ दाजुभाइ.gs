@@ -1,5 +1,5 @@
 /**
- * बस व्यवस्थापन प्रणाली - सुधारिएको Code.gs
+ * बस व्यवस्थापन प्रणाली - सुपर फास्ट र अटोमेटिक (Full Version)
  */
 
 function doGet() {
@@ -13,22 +13,24 @@ function doGet() {
 function processEntry(obj) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = obj.sheetYearMonth; 
+    const sheetName = obj.sheetYearMonth.trim(); 
     let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
     
+    // नयाँ महिनाको सिट हो भने हेडर राख्ने
     if (sheet.getLastRow() === 0) {
       const headers = ["मिति (BS)", "मिति (AD)", "प्रकार", "नाम", "ब्याज दर %", "थप सावाँ/बिल", "किस्ता/भुक्तानी", "तिरेको ब्याज", "कुल बाँकी", "कैफियत", "फोटो"];
       sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f3f3f3");
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f3f3f3").setHorizontalAlignment("center");
     }
 
     const photoStatus = (obj.imageBlob && obj.imageBlob.includes(',')) ? saveFile(obj) : "फोटो छैन";
 
+    // डाटा इन्ट्री गर्दा नै सफा (Clean) गरेर हाल्ने
     sheet.appendRow([
       obj.nepDate, 
       obj.engDate, 
-      obj.cat, 
-      obj.name, 
+      obj.cat.trim(), 
+      obj.name.trim(), 
       parseFloat(obj.rate) || 0, 
       parseFloat(obj.addSawa_or_Bill) || 0, 
       parseFloat(obj.paidKista_or_Pay) || 0, 
@@ -45,70 +47,83 @@ function processEntry(obj) {
   }
 }
 
-// २. समरी र ब्याज गणना (सुधारिएको लोजिक)
+// २. समरी र ब्याज गणना (सुपर फास्ट फिल्टरिङ लोजिक)
 function getSummary(name, cat, selectedDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
-  let sawa = 0, accruedInterest = 0, count = 0, lastDateAD = null, lastDateBS = "-", lastRate = 0, lastK = 0;
+  let sawa = 0, accruedInterest = 0, count = 0;
+  let lastDateAD = null, lastDateBS = "-", lastRate = 0, lastK = 0;
+  
   const selDate = new Date(selectedDate);
+  const targetName = name.trim();
+  const targetCat = cat.trim();
   
   let allEntries = [];
 
+  // महिना चिनारीका लागि प्रयोग हुने नेपाली महिनाको सूची
+  const nepMonths = ["वैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत", "बैशाख"];
+
   sheets.forEach(sheet => {
-    if (["Settings", "सेटिङ"].includes(sheet.getName())) return;
+    const sName = sheet.getName();
+    
+    // १. यो सिट एपले बनाएको महिनाको सिट हो कि होइन चेक गर्ने (Smart Filter)
+    let isMonthSheet = nepMonths.some(m => sName.includes(m));
+    if (!isMonthSheet) return; // यदि महिनाको सिट होइन भने इग्नोर गर्ने (जस्तै: Sheet1, Settings)
+
     const data = sheet.getDataRange().getValues();
+    // डाटा प्रोसेसिङ - फास्ट फिल्टर
     for (let i = 1; i < data.length; i++) {
-      // नाम र प्रकार मिल्नुपर्छ (Case-insensitive check)
-      if (data[i][2] === cat && data[i][3].toString().trim() === name.trim()) {
+      if (data[i][2] && data[i][3] && 
+          data[i][2].toString().trim() === targetCat && 
+          data[i][3].toString().trim() === targetName) {
         allEntries.push(data[i]);
       }
     }
   });
 
-  // मिति अनुसार क्रमबद्ध गर्ने
+  // मिति अनुसार क्रमबद्ध (सही ब्याज गणनाको लागि अनिवार्य)
   allEntries.sort((a, b) => new Date(a[1]) - new Date(b[1]));
 
   allEntries.forEach(row => {
     let rowDate = new Date(row[1]);
-    if (rowDate > selDate) return;
+    if (rowDate > selDate) return; 
 
     let currentRate = parseFloat(row[4]) || 0;
     
-    // ब्याज गणना: अघिल्लो कारोबार देखि अहिले सम्मको
-    if (lastDateAD && (cat === "ऋण" || cat === "व्यक्तिगत")) {
-      let days = Math.floor((rowDate - lastDateAD) / (1000 * 60 * 60 * 24));
+    // सावाँ र ब्याजको दिन गन्ती
+    if (lastDateAD && (targetCat === "ऋण" || targetCat === "व्यक्तिगत")) {
+      let days = Math.floor((rowDate.getTime() - lastDateAD.getTime()) / (1000 * 60 * 60 * 24));
       if (days > 0) accruedInterest += (sawa * (lastRate / 100) * days) / 365;
     }
     
-    let tS = parseFloat(row[5]) || 0; // थप सावाँ
-    let pK = parseFloat(row[6]) || 0; // किस्ता/फिर्ता
-    let pB = parseFloat(row[7]) || 0; // ब्याज तिरेको
+    let addAmt = parseFloat(row[5]) || 0; 
+    let subAmt = parseFloat(row[6]) || 0; 
+    let interestPaid = parseFloat(row[7]) || 0; 
 
-    if (cat === "व्यक्तिगत" || cat === "ऋण") {
-      lastK = pK > 0 ? pK : (tS > 0 ? tS : 0);
-      sawa += (tS - pK);
-      accruedInterest -= pB; // तिरेको ब्याज घटाउने
+    if (targetCat === "ऋण" || targetCat === "व्यक्तिगत") {
+      sawa += (addAmt - subAmt);
+      accruedInterest -= interestPaid; 
     } else { 
-      lastK = pK > 0 ? pK : (tS > 0 ? tS : 0);
-      sawa += (tS - pK); 
+      sawa += (addAmt - subAmt); 
     }
     
     lastDateAD = rowDate; 
     lastDateBS = row[0]; 
     lastRate = currentRate;
+    lastK = subAmt > 0 ? subAmt : (addAmt > 0 ? addAmt : 0);
     count++;
   });
 
-  // अन्तिम कारोबार देखि आज सम्मको बाँकी ब्याज थप्ने
-  if (lastDateAD && (cat === "ऋण" || cat === "व्यक्तिगत")) {
-    let finalDays = Math.floor((selDate - lastDateAD) / (1000 * 60 * 60 * 24));
+  // अन्तिम कारोबार देखि अहिले सम्मको ब्याज
+  if (lastDateAD && (targetCat === "ऋण" || targetCat === "व्यक्तिगत")) {
+    let finalDays = Math.floor((selDate.getTime() - lastDateAD.getTime()) / (1000 * 60 * 60 * 24));
     if (finalDays > 0) accruedInterest += (sawa * (lastRate / 100) * finalDays) / 365;
   }
 
   return { 
     sawa: Math.round(sawa), 
-    accruedInterest: Math.max(0, Math.round(accruedInterest)), // ब्याज माइनसमा नजाओस्
-    total: Math.round(sawa + Math.max(0, accruedInterest)), 
+    accruedInterest: Math.max(0, Math.round(accruedInterest)), 
+    total: Math.round(sawa + (targetCat === "ऋण" || targetCat === "व्यक्तिगत" ? Math.max(0, accruedInterest) : 0)), 
     count: count, 
     lastDate: lastDateBS, 
     rate: lastRate, 
@@ -116,27 +131,22 @@ function getSummary(name, cat, selectedDate) {
   };
 }
 
-// ३. फोटो सेभ गर्ने (सुधारिएको Drive access)
+// ३. फोटो र सेटिङ (Standard)
 function saveFile(obj) {
   try {
     let folder, folders = DriveApp.getFoldersByName("Bus_Management_Photos");
     folder = folders.hasNext() ? folders.next() : DriveApp.createFolder("Bus_Management_Photos");
-    
-    const contentType = obj.imageBlob.split(',')[0].split(':')[1].split(';')[0];
     const bytes = Utilities.base64Decode(obj.imageBlob.split(',')[1]);
-    const blob = Utilities.newBlob(bytes, contentType, obj.name + "_" + obj.nepDate + ".jpg");
-    
+    const blob = Utilities.newBlob(bytes, "image/jpeg", obj.name + "_" + obj.nepDate + ".jpg");
     const file = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); // फोटो हेर्न मिल्ने बनाउन
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return '=HYPERLINK("' + file.getUrl() + '", "फोटो हेर्नुस्")';
   } catch(e) { return "Error: " + e.toString(); }
 }
 
-// ४. सेटिङ र अन्य युटिलिटी
 function getSettings() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sSheet = ss.getSheetByName("सेटिङ") || ss.insertSheet("सेटिङ");
-  if(sSheet.getLastRow() < 1) sSheet.appendRow(["Setting Key", "Setting Value"]);
   const data = sSheet.getDataRange().getValues();
   let settings = {};
   for(let i=1; i<data.length; i++) { if(data[i][0]) settings[data[i][0]] = data[i][1]; }
@@ -149,11 +159,7 @@ function updateSettings(k, v) {
   const data = sSheet.getDataRange().getValues();
   let found = false;
   for(let i=1; i<data.length; i++) { 
-    if(data[i][0] == k) { 
-      sSheet.getRange(i+1, 2).setValue(v); 
-      found = true; 
-      break; 
-    } 
+    if(data[i][0] == k) { sSheet.getRange(i+1, 2).setValue(v); found = true; break; } 
   }
   if(!found) sSheet.appendRow([k, v]);
   return "SUCCESS";
@@ -162,18 +168,6 @@ function updateSettings(k, v) {
 function formatMySheet(sheet) {
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
-  if (lastRow <= 1) return;
-  
-  sheet.getRange(1, 1, lastRow, lastCol)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
-    .setFontFamily("Mukta")
-    .setFontSize(10);
-    
+  sheet.getRange(1, 1, lastRow, lastCol).setHorizontalAlignment("center").setVerticalAlignment("middle").setFontFamily("Mukta");
   sheet.autoResizeColumns(1, lastCol);
-  
-  // कोलम चौडाइमा २५ पिक्सेल प्याडिङ थप्ने
-  for(let i=1; i<=lastCol; i++) {
-    sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 25);
-  }
 }
