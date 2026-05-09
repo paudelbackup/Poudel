@@ -78,7 +78,7 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
-// --- मुख्य डेटा प्रशोधन (सुधारिएको कोलम विड्थ र रङ लजिक) ---
+// --- मुख्य डेटा प्रशोधन ---
 function process(data, photoObj) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000); 
@@ -94,6 +94,29 @@ function process(data, photoObj) {
       sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#22c55e").setFontColor("white").setHorizontalAlignment("center").setVerticalAlignment("middle");
       sheet.setFrozenRows(1);
     }
+
+    const lastRow = sheet.getLastRow();
+
+    // --- P, Q, R कोलमको लागि अघिल्लो टोटल तान्ने लजिक ---
+    let prevTotalLiter = 0;
+    let prevTotalDAmount = 0;
+    let prevTotalResBal = 0;
+
+    if (lastRow > 1) {
+      const lastTotals = sheet.getRange(lastRow, 16, 1, 3).getValues()[0]; 
+      prevTotalLiter = parseFloat(lastTotals[0]) || 0;
+      prevTotalDAmount = parseFloat(lastTotals[1]) || 0;
+      prevTotalResBal = parseFloat(lastTotals[2]) || 0;
+    }
+
+    // नयाँ मानहरू
+    const curLit = parseFloat(toEngNum(data.dLiter)) || 0;
+    const curAmt = parseFloat(toEngNum(data.dAmount)) || 0;
+    const curBal = parseFloat(toEngNum(data.balance)) || 0;
+
+    const newTotalLiter = prevTotalLiter + curLit;
+    const newTotalDAmount = prevTotalDAmount + curAmt;
+    const newTotalResBal = prevTotalResBal + curBal;
 
     const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
     const busNumStr = data.busNumber.toString().trim();
@@ -113,34 +136,30 @@ function process(data, photoObj) {
       toNepNum(data.nepDateRaw), data.nepDay, data.engDate, 
       (data.entryType === "Institution" ? "संस्था" : "रिजर्भ"),
       instOrRoute, busNumStr, data.driverName,
-      data.dLiter || 0, data.dRate || 0, data.dAmount || 0,
+      curLit, data.dRate || 0, curAmt,
       todayKMInput, drivenKM,
-      data.totalReserveAmount || 0, data.staffAllowance || 0, data.balance || 0,
-      0, 0, 0, 
+      data.totalReserveAmount || 0, data.staffAllowance || 0, curBal,
+      newTotalLiter, newTotalDAmount, newTotalResBal, 
       data.remarks || "", photoLink, (data.entryType === "Institution" ? (data.nepDateRaw + "|" + instOrRoute + "|" + busNumStr) : "RES_" + Utilities.getUuid())
     ];
 
     sheet.appendRow(rowData);
-    const lastRow = sheet.getLastRow();
-    const range = sheet.getRange(lastRow, 1, 1, headers.length);
+    const nLastRow = sheet.getLastRow();
+    const range = sheet.getRange(nLastRow, 1, 1, headers.length);
     range.setHorizontalAlignment("center").setVerticalAlignment("middle");
 
-    // सिफ्ट अनुसार कोलम ५ (संस्था/रुट) मा रङ भर्ने
     if (data.shiftColor) {
-      sheet.getRange(lastRow, 5).setFontColor(data.shiftColor).setFontWeight("bold");
+      sheet.getRange(nLastRow, 5).setFontColor(data.shiftColor).setFontWeight("bold");
     }
 
-    // रिजर्भ इन्ट्री भए पुरै लाइन रातो बनाउने
     if (data.entryType === "Reserve") {
       range.setFontColor("#ff0000").setFontWeight("bold");
     }
 
-    // मिति अनुसार सर्ट गर्ने
-    if (lastRow > 1) {
-      sheet.getRange(2, 1, lastRow - 1, headers.length).sort({column: 1, ascending: true});
+    if (nLastRow > 1) {
+      sheet.getRange(2, 1, nLastRow - 1, headers.length).sort({column: 1, ascending: true});
     }
 
-    // कोलमको चौडाइ अटो मिलाएर थप ३५ पिक्सेल बढाउने (ताकी नछोपियोस्)
     sheet.autoResizeColumns(1, headers.length);
     for (let col = 1; col <= headers.length; col++) {
       sheet.setColumnWidth(col, sheet.getColumnWidth(col) + 35); 
