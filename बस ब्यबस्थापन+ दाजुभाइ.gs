@@ -1,5 +1,6 @@
 /**
  * बस व्यवस्थापन प्रणाली - सुपर फास्ट र अटोमेटिक (Full Version)
+ * अपडेट: मिति अनुसार अटो-सर्टिङ सुविधा सहित
  */
 
 function doGet() {
@@ -9,7 +10,7 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// १. डाटा सुरक्षित गर्ने फंक्सन
+// १. डाटा सुरक्षित गर्ने र मिति अनुसार अटो-सर्ट गर्ने फंक्सन
 function processEntry(obj) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -25,7 +26,7 @@ function processEntry(obj) {
 
     const photoStatus = (obj.imageBlob && obj.imageBlob.includes(',')) ? saveFile(obj) : "फोटो छैन";
 
-    // डाटा इन्ट्री गर्दा नै सफा (Clean) गरेर हाल्ने
+    // डाटा इन्ट्री गर्ने
     sheet.appendRow([
       obj.nepDate, 
       obj.engDate, 
@@ -40,6 +41,15 @@ function processEntry(obj) {
       photoStatus
     ]);
 
+    // --- मिति अनुसार डाटा मिलाउने लजिक (Sorting) ---
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 2) { 
+      const range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
+      // कोलम २ (English Date - AD) को आधारमा सानो देखि ठूलो क्रममा मिलाउने
+      range.sort({column: 2, ascending: true});
+    }
+    // ----------------------------------------------
+
     formatMySheet(sheet);
     return "SUCCESS";
   } catch (e) {
@@ -47,7 +57,7 @@ function processEntry(obj) {
   }
 }
 
-// २. समरी र ब्याज गणना (सुपर फास्ट फिल्टरिङ लोजिक)
+// २. समरी र ब्याज गणना (सुपर फास्ट फिल्टरिङ लोजिक - जस्ताको तस्तै)
 function getSummary(name, cat, selectedDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
@@ -59,19 +69,14 @@ function getSummary(name, cat, selectedDate) {
   const targetCat = cat.trim();
   
   let allEntries = [];
-
-  // महिना चिनारीका लागि प्रयोग हुने नेपाली महिनाको सूची
   const nepMonths = ["वैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत", "बैशाख"];
 
   sheets.forEach(sheet => {
     const sName = sheet.getName();
-    
-    // १. यो सिट एपले बनाएको महिनाको सिट हो कि होइन चेक गर्ने (Smart Filter)
     let isMonthSheet = nepMonths.some(m => sName.includes(m));
-    if (!isMonthSheet) return; // यदि महिनाको सिट होइन भने इग्नोर गर्ने (जस्तै: Sheet1, Settings)
+    if (!isMonthSheet) return;
 
     const data = sheet.getDataRange().getValues();
-    // डाटा प्रोसेसिङ - फास्ट फिल्टर
     for (let i = 1; i < data.length; i++) {
       if (data[i][2] && data[i][3] && 
           data[i][2].toString().trim() === targetCat && 
@@ -81,7 +86,6 @@ function getSummary(name, cat, selectedDate) {
     }
   });
 
-  // मिति अनुसार क्रमबद्ध (सही ब्याज गणनाको लागि अनिवार्य)
   allEntries.sort((a, b) => new Date(a[1]) - new Date(b[1]));
 
   allEntries.forEach(row => {
@@ -89,8 +93,6 @@ function getSummary(name, cat, selectedDate) {
     if (rowDate > selDate) return; 
 
     let currentRate = parseFloat(row[4]) || 0;
-    
-    // सावाँ र ब्याजको दिन गन्ती
     if (lastDateAD && (targetCat === "ऋण" || targetCat === "व्यक्तिगत")) {
       let days = Math.floor((rowDate.getTime() - lastDateAD.getTime()) / (1000 * 60 * 60 * 24));
       if (days > 0) accruedInterest += (sawa * (lastRate / 100) * days) / 365;
@@ -114,7 +116,6 @@ function getSummary(name, cat, selectedDate) {
     count++;
   });
 
-  // अन्तिम कारोबार देखि अहिले सम्मको ब्याज
   if (lastDateAD && (targetCat === "ऋण" || targetCat === "व्यक्तिगत")) {
     let finalDays = Math.floor((selDate.getTime() - lastDateAD.getTime()) / (1000 * 60 * 60 * 24));
     if (finalDays > 0) accruedInterest += (sawa * (lastRate / 100) * finalDays) / 365;
