@@ -20,7 +20,6 @@
     .header-right { display: flex; gap: 5px; flex: 3; justify-content: flex-end; }
     .head-sel { background: #0f172a; color: white; border: 1px solid var(--blue); border-radius: 5px; padding: 4px; font-size: 11px; font-weight: 800; outline: none; }
 
-    /* सुधार १: दुई छेउमा पर्फेक्ट ग्याप राख्ने ओरिजिनल कन्टेनर */
     .container { padding: 12px; max-width: 600px; margin: auto; }
     
     .setting-bar { display: flex; gap: 5px; margin-bottom: 12px; }
@@ -35,7 +34,6 @@
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--blue); }
     .label { font-size: 10px; color: var(--blue); font-weight: 800; margin-bottom: 4px; text-transform: uppercase; text-align: left; }
     
-    /* सुधार १: डेटा जतिसुकै लामो भए पनि होरिजन्टलमै सिधा बस्ने (No Double Row/Wrap) र टेक्स्ट सेन्टर हुने संरचना */
     input, select, .km-box { 
       width: 100%; height: 40px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border); color: white; 
       font-size: 14px; font-weight: 700; outline: none; padding: 0 4px; text-align: center;
@@ -44,7 +42,6 @@
     
     .km-box { border: 2px solid var(--green); color: var(--green); font-family: 'Orbitron'; display: flex; align-items: center; justify-content: center; }
     
-    /* सुधार १: एउटै होरिजन्टल लाइनमा नटुटाई देखाउन फ्लेक्स रो नो-र्याप */
     .row { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 6px; margin-bottom: 10px; width: 100%; overflow: hidden; }
     .col { flex: 1; min-width: 0; }
 
@@ -53,22 +50,23 @@
 
     .btn-save { background: linear-gradient(135deg, var(--blue), var(--green)); border: none; padding: 16px; border-radius: 15px; color: #000; font-size: 18px; font-weight: 900; width: 100%; cursor: pointer; }
 
-    /* Modal Styles */
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center; }
     .modal-content { background:var(--card); padding:20px; border-radius:15px; border:2px solid var(--blue); width:90%; max-width:320px; text-align: center; }
     .m-list { max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; }
     .m-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); color: white; font-weight: 600; }
     
-    /* Date Pop Specific */
     .date-pop-card { background: var(--bg); border: 1px solid var(--blue); border-radius: 10px; padding: 15px; margin-top: 10px; }
+    
+    /* सुधार ३: प्लस माइनस बटन क्लिक गर्दा एक्टिभ रङ संकेत */
+    .btn-date-adj:active { background: #fff !important; color: #000 !important; transform: scale(0.95); transition: 0.1s; }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <div id="bsDisplay">२०८३ जेठ ५ बुधबार</div>
+  <div id="bsDisplay">लोड हुँदैछ...</div>
   <div class="header-right">
-    <select id="tripSelectHeader" class="head-sel"><option>ट्रिप</option></select>
+    <select id="tripSelectHeader" class="head-sel"><option value="">ट्रिप</option></select>
     <select id="shiftSelect" class="head-sel">
       <option value="बिहान">बिहान</option>
       <option value="दिउँसो">दिउँसो</option>
@@ -95,7 +93,7 @@
   <form id="mainForm">
     <div class="card">
       <div class="row">
-        <div class="col"><div class="label">बस नम्बर</div><select id="busNumber"></select></div>
+        <div class="col"><div class="label">बस नम्बर</div><select id="busNumber" onchange="fetchOldKM()"></select></div>
         <div class="col" id="instCol"><div class="label">संस्था</div><select id="instName"></select></div>
         <div class="col"><div class="label">ड्राइभर</div><select id="driverName"></select></div>
       </div>
@@ -124,8 +122,8 @@
   <div class="modal-content">
     <h3 style="color:var(--blue); margin-bottom:15px;">मिति व्यवस्थापन</h3>
     <div class="row">
-      <button class="btn-save" style="flex:1; padding:10px;" onclick="adjustDay(-1)">- १ गते</button>
-      <button class="btn-save" style="flex:1; padding:10px; background:var(--orange);" onclick="adjustDay(1)">+ १ गते</button>
+      <button class="btn-save btn-date-adj" style="flex:1; padding:10px;" onclick="adjustDayOnly(-1)">- १ गते</button>
+      <button class="btn-save btn-date-adj" style="flex:1; padding:10px; background:var(--orange);" onclick="adjustDayOnly(1)">+ १ गते</button>
     </div>
     <div class="date-pop-card">
       <div class="label" style="text-align:center">AD क्यालेन्डरबाट छान्नुहोस्</div>
@@ -135,15 +133,17 @@
   </div>
 </div>
 
-<div id="mgrModal" class="modal"><div class="modal-content"><h3 id="mgrTitle"></h3><div class="row"><input type="text" id="mgrInput" style="flex:1"><button onclick="addMgrItem()" style="background:var(--green); border:none; padding:0 15px; border-radius:8px;">ADD</button></div><div id="mgrList" class="m-list"></div><button onclick="closeMgr()" style="width:100%; padding:10px; background:var(--red); border:none; color:white; border-radius:10px;">CLOSE</button></div></div>
+<div id="mgrModal" class="modal"><div class="modal-content"><h3 id="mgrTitle"></h3><div class="row"><input type="text" id="mgrInput" style="flex:1"><button id="addBtnGlobal" onclick="addMgrItem()" style="background:var(--green); border:none; padding:0 15px; border-radius:8px; color:black; font-weight:bold;">ADD</button></div><div id="mgrList" class="m-list"></div><button onclick="closeMgr()" style="width:100%; padding:10px; background:var(--red); border:none; color:white; border-radius:10px; font-weight:bold;">CLOSE</button></div></div>
 
 <script>
 let manualOffset = 0; 
 let baseEngDate = new Date(); 
+let dayOffsetOnly = 0; 
 const nD = ['०','१','२','३','४','५','६','७','८','९'];
 const toN = n => n.toString().replace(/\d/g, d => nD[d]);
 
 let globalEntryType = "Institution";
+let serverSettingsGlobal = { busNumber: [], driverName: [], instName: [], tripList: [], lastOffset: 0 };
 
 function openDateModal() { document.getElementById('dateModal').style.display = 'flex'; }
 function closeDateModal() { document.getElementById('dateModal').style.display = 'none'; }
@@ -152,15 +152,15 @@ function pickADDate(val) {
   if(!val) return;
   baseEngDate = new Date(val);
   manualOffset = 0; 
+  dayOffsetOnly = 0; 
   updateBSDate();
 }
 
-function adjustDay(v) {
-  manualOffset += v;
+function adjustDayOnly(v) {
+  dayOffsetOnly += v;
   updateBSDate();
 }
 
-// सुधार ४: गते मात्र फेरबदल हुने र बार प्रस्ट रूपमा क्यालकुलेट हुने ओरिजिनल लजिक
 function updateBSDate() {
   let calcD = new Date(baseEngDate);
   calcD.setDate(calcD.getDate() + manualOffset);
@@ -174,15 +174,21 @@ function updateBSDate() {
     if(d > mDays[i]) { d -= mDays[i]; m++; } else break;
   }
   
-  const mNames = ["वैशाख","जेठ","असार","साउन","भदौ","असोज","कात्तिक","मंसिर","पुष","माघ","फागुन","चैत"];
+  let finalDay = d + dayOffsetOnly;
+  if(finalDay < 1) finalDay = 1; 
+  if(finalDay > mDays[m-1]) finalDay = mDays[m-1];
+  
+  const mNames = ["वैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"];
   const dNames = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"];
   
-  const formattedBS = `${toN(y)} ${mNames[m-1]} ${toN(d < 10 ? '0' + d : d)} ${dNames[calcD.getDay()]}`;
+  const currentBar = dNames[calcD.getDay()];
+  
+  const formattedBS = `${toN(y)} ${mNames[m-1]} ${toN(finalDay < 10 ? '0' + finalDay : finalDay)} ${currentBar}`;
   document.getElementById('bsDisplay').innerText = formattedBS;
 
   window.nepaliMonthStr = mNames[m-1];
-  window.nepaliFullRawDate = `${y}-${m < 10 ? '0' + m : m}-${d < 10 ? '0' + d : d}`;
-  window.nepaliDayStr = dNames[calcD.getDay()];
+  window.nepaliFullRawDate = `${y}-${m < 10 ? '0' + m : m}-${finalDay < 10 ? '0' + finalDay : finalDay}`;
+  window.nepaliDayStr = currentBar;
 }
 
 function switchSection(t) {
@@ -201,7 +207,6 @@ function dfc() {
   if(globalEntryType === "Reserve") reCalc();
 }
 
-// सुधार २: रिजर्भको वास्तविक नाफा निकालिने फर्मुला: भाडा - खर्च - डिजेल रकम
 function reCalc() { 
   let a=parseFloat(document.getElementById('resAmt').value)||0;
   let e=parseFloat(document.getElementById('resExp').value)||0; 
@@ -211,7 +216,25 @@ function reCalc() {
   document.getElementById('resSav').innerText = toN(totalSavings); 
 }
 
-function upKM() { let s=0, c=parseFloat(document.getElementById('cKM').value)||0; document.getElementById('rKM').innerText=toN(c>s?Math.round(c-s):0); }
+function upKM() { 
+  let s=parseFloat(toEngNum(document.getElementById('oKM').innerText))||0; 
+  let c=parseFloat(document.getElementById('cKM').value)||0; 
+  document.getElementById('rKM').innerText=toN(c>s?Math.round(c-s):0); 
+}
+
+function toEngNum(n) {
+  const nepDigits = {'०':'0','१':'1','२':'2','३':'3','४':'4','५':'5','६':'6','७':'7','८':'8','९':'9'};
+  return n.toString().replace(/[०-९]/g, d => nepDigits[d]);
+}
+
+function fetchOldKM() {
+  let bus = document.getElementById('busNumber').value;
+  if(!bus) return;
+  google.script.run.withSuccessHandler(function(km) {
+    document.getElementById('oKM').innerText = toN(km || 0);
+    upKM();
+  }).getLastKM(bus, window.nepaliMonthStr);
+}
 
 function saveFormRecord() {
   let fileInput = document.getElementById('pFile');
@@ -234,15 +257,15 @@ function saveFormRecord() {
     dLiter: document.getElementById('dLit').value,
     dRate: document.getElementById('dRat').value,
     dAmount: document.getElementById('dAmt').value,
-    lastKM: "0", 
+    lastKM: toEngNum(document.getElementById('oKM').innerText), 
     currentKM: document.getElementById('cKM').value,
     routeFrom: document.getElementById('fromLoc') ? document.getElementById('fromLoc').value : "",
     routeTo: document.getElementById('toLoc') ? document.getElementById('toLoc').value : "",
     totalReserveAmount: document.getElementById('resAmt') ? document.getElementById('resAmt').value : "0",
     staffAllowance: document.getElementById('resExp') ? document.getElementById('resExp').value : "0",
-    balance: document.getElementById('resSav').innerText,
+    balance: toEngNum(document.getElementById('resSav').innerText),
     remarks: document.getElementById('rem').value,
-    manualOffsetSaved: manualOffset.toString()
+    manualOffsetSaved: dayOffsetOnly.toString() // सुधार ३: थपघट भएको अफसेट पनि सेभ हुने
   };
 
   if (fileInput.files && fileInput.files[0]) {
@@ -259,17 +282,28 @@ function saveFormRecord() {
   }
 }
 
+// सुधार २: सफलता म्यासेज पछि ठीक ३ सेकेन्ड होल्ड भएर फर्म मात्र रिसेट हुने लजिक
 function sendToServer(payload, photoObj) {
   google.script.run
     .withSuccessHandler(function(res) {
       Swal.close();
       if(res === "SUCCESS") {
-        Swal.fire('सफलता', 'डाटा सुरक्षित भयो !', 'success');
-        document.getElementById('mainForm').reset();
-        document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
-        document.getElementById('shiftSelect').value = "दुवै";
-        document.getElementById('resSav').innerText = "०";
-        document.getElementById('rKM').innerText = "०";
+        Swal.fire({
+          title: 'सफलता',
+          text: 'डाटा सुरक्षित भयो !',
+          icon: 'success',
+          timer: 3000, // ३ सेकेन्ड होल्ड गर्ने
+          showConfirmButton: true
+        }).then(() => {
+          // ३ सेकेन्डपछि वा ओके थिचेपछि फर्म मात्र रिसेट (पेज लोड हुँदैन)
+          document.getElementById('mainForm').reset();
+          document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
+          document.getElementById('shiftSelect').value = "दुवै";
+          document.getElementById('resSav').innerText = "०";
+          document.getElementById('rKM').innerText = "०";
+          document.getElementById('oKM').innerText = "०";
+          loadServerSettings();
+        });
       } else {
         Swal.fire('त्रुटि', res, 'error');
       }
@@ -282,16 +316,78 @@ function sendToServer(payload, photoObj) {
 }
 
 let currentKey = "";
-function openMgr(k, t) { currentKey=k; document.getElementById('mgrTitle').innerText=t; renderMgr(); document.getElementById('mgrModal').style.display='flex'; }
-function closeMgr() { document.getElementById('mgrModal').style.display='none'; }
-function renderMgr() { let items=JSON.parse(localStorage.getItem(currentKey))||[]; document.getElementById('mgrList').innerHTML=items.map((it, i)=>`<div class="m-item"><span>${it}</span><i class="fas fa-trash" onclick="deleteMgrItem(${i})" style="color:var(--red)"></i></div>`).join(''); }
-function addMgrItem() { let v=document.getElementById('mgrInput').value; if(!v)return; let items=JSON.parse(localStorage.getItem(currentKey))||[]; items.push(v); localStorage.setItem(currentKey, JSON.stringify(items)); document.getElementById('mgrInput').value=""; renderMgr(); updateDropdowns(); }
-function deleteMgrItem(i) { let items=JSON.parse(localStorage.getItem(currentKey))||[]; items.splice(i,1); localStorage.setItem(currentKey, JSON.stringify(items)); renderMgr(); updateDropdowns(); }
-function updateDropdowns() { ['busNumber', 'instName', 'driverName', 'tripSelectHeader'].forEach((id, idx) => { let k = ['busNumber', 'instName', 'driverName', 'tripList'][idx]; let it = JSON.parse(localStorage.getItem(k))||[]; let d = document.getElementById(id); if(d) d.innerHTML = `<option value="">${id==='tripSelectHeader'?'ट्रिप':'छान्नुहोस्'}</option>` + it.map(x=>`<option value="${x}">${x}</option>`).join(''); }); }
+function openMgr(k, t) { 
+  currentKey = k; 
+  document.getElementById('mgrTitle').innerText = t; 
+  renderMgr(); 
+  document.getElementById('mgrModal').style.display = 'flex'; 
+}
+function closeMgr() { document.getElementById('mgrModal').style.display = 'none'; }
+
+function renderMgr() { 
+  let mappedKey = currentKey === 'tripList' ? 'tripList' : currentKey;
+  let items = serverSettingsGlobal[mappedKey] || [];
+  document.getElementById('mgrList').innerHTML = items.map((it, i) => 
+    `<div class="m-item"><span>${it}</span><i class="fas fa-trash" onclick="deleteMgrItem('${it}')" style="color:var(--red); cursor:pointer;"></i></div>`
+  ).join(''); 
+}
+
+function addMgrItem() { 
+  let v = document.getElementById('mgrInput').value.trim(); 
+  if(!v) return;
+  Swal.fire({ title: 'थपिँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  
+  google.script.run.withSuccessHandler(function(res) {
+    Swal.close();
+    document.getElementById('mgrInput').value = "";
+    loadServerSettings();
+  }).saveSettingToSheet(currentKey, v);
+}
+
+function deleteMgrItem(val) {
+  Swal.fire({ title: 'हटाइँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  google.script.run.withSuccessHandler(function(res) {
+    Swal.close();
+    loadServerSettings();
+  }).removeSettingFromSheet(currentKey, val);
+}
+
+function loadServerSettings() {
+  google.script.run.withSuccessHandler(function(settings) {
+    serverSettingsGlobal = settings;
+    
+    const fields = [
+      { id: 'busNumber', list: settings.busNumber, last: settings.lastBus, label: 'छान्नुहोस्' },
+      { id: 'driverName', list: settings.driverName, last: settings.lastDriver, label: 'छान्नुहोस्' },
+      { id: 'instName', list: settings.instName, last: settings.lastInstitution, label: 'छान्नुहोस्' },
+      { id: 'tripSelectHeader', list: settings.tripList, last: settings.lastTrip, label: 'ट्रिप' }
+    ];
+    
+    fields.forEach(f => {
+      let el = document.getElementById(f.id);
+      if(el) {
+        let html = `<option value="">${f.label}</option>`;
+        f.list.forEach(item => {
+          let selected = (f.last && f.last.toString().trim() === item.toString().trim()) ? 'selected' : '';
+          html += `<option value="${item}" ${selected}>${item}</option>`;
+        });
+        el.innerHTML = html;
+      }
+    });
+    
+    if(settings.lastOffset) {
+      dayOffsetOnly = parseInt(settings.lastOffset) || 0;
+      updateBSDate();
+    }
+    
+    if(currentKey) renderMgr();
+    fetchOldKM();
+  }).getSettings();
+}
 
 window.onload = () => {
   updateBSDate();
-  updateDropdowns();
+  loadServerSettings();
 };
 </script>
 </body>
