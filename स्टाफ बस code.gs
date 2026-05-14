@@ -8,7 +8,7 @@ function doGet() {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// सेटिङ र ब्याकअपहरू सिधै गुगल सिटबाट तान्ने र सिंक गर्ने
+// सेटिङ र ब्याकअपहरू गुगल सिटबाट तान्ने
 function getSettings() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName("Add Setting") || ss.insertSheet("Add Setting");
@@ -76,6 +76,7 @@ function toEngNum(n) {
   return n.toString().replace(/[०-९]/g, d => nepDigits[d]);
 }
 
+// अङ्ग्रेजी नम्बरलाई नेपाली अङ्कमा बदल्ने फङ्ग्सन
 function toNepNum(n) {
   if (!n) return "";
   const nepDigits = ['०','१','२','३','४','५','६','७','८','९'];
@@ -94,7 +95,7 @@ function getLastKM(busNumber, currentMonthName) {
       let data = sheet.getDataRange().getValues();
       for (let j = data.length - 1; j >= 1; j--) {
         if (toEngNum(data[j][5]).toString().trim() === searchBus) {
-          let lastKM = parseFloat(toEngNum(data[j][12])); // सिफ्ट र ट्रिप थपिएकाले कोलम सरेको आधारमा (आजको KM)
+          let lastKM = parseFloat(toEngNum(data[j][12])); 
           if (!isNaN(lastKM) && lastKM > 0) return lastKM;
         }
       }
@@ -103,7 +104,7 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
-// मुख्य डेटा प्रशोधन (सुधार १: सिफ्ट र ट्रिप कोलम व्यवस्थित गरियो)
+// मुख्य डाटा सेभ प्रक्रिया (गते नेपाली अङ्कमा सुनिश्चित गर्ने सुधारसहित)
 function process(data, photoObj) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000); 
@@ -112,7 +113,7 @@ function process(data, photoObj) {
     const sheetName = "२०८३ " + data.nepMonthName;
     let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
     
-    // सिफ्ट र ट्रिप सहितको नयाँ कोलम हेडर्स संरचना
+    // सिफ्ट र ट्रिप समावेश भएको कोलम संरचना
     const headers = ["मिति (BS)", "बार", "मिति (AD)", "प्रकार", "संस्था/रुट", "बस नं", "ड्राइभर", "सिफ्ट", "ट्रिप", "लिटर", "रेट", "डिजल रकम", "आजको KM", "चलेको KM", "रिजर्भ रकम", "बैना/खर्च", "बचत", "कुल डिजेल लिटर", "कुल डिजेल रकम", "कुल रिजर्भ बचत", "विवरण", "फोटो", "KEY"];
     
     if (sheet.getLastRow() === 0) {
@@ -146,7 +147,7 @@ function process(data, photoObj) {
       const fullData = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
       for (let i = 0; i < fullData.length; i++) {
         if (fullData[i][5].toString().trim() === busNumStr && fullData[i][4].toString().trim() === instOrRoute) {
-          prevTotalLiter += parseFloat(fullData[i][17]) || 0; // कोलम स्थान मिलाइएको
+          prevTotalLiter += parseFloat(fullData[i][17]) || 0; 
           prevTotalDAmount += parseFloat(fullData[i][18]) || 0;
           prevTotalResBal += parseFloat(fullData[i][19]) || 0;
         }
@@ -168,16 +169,19 @@ function process(data, photoObj) {
     const todayKMInput = parseFloat(toEngNum(data.currentKM)) || 0;
     let drivenKM = (todayKMInput > lastKMVal) ? (todayKMInput - lastKMVal) : 0;
 
+    // मुख्य सुधार: अंग्रेजी गते स्वरूप (2083-02-05) लाई नेपाली अङ्क (२०८३-०२-०५) मा परिवर्तन
+    const nepaliDateInNepDigits = toNepNum(data.nepDateRaw);
+
     const rowData = [
-      data.nepDateRaw, data.nepDay, data.engDate, 
+      nepaliDateInNepDigits, data.nepDay, data.engDate, 
       (data.entryType === "Institution" ? "संस्था" : "रिजर्भ"),
       instOrRoute, busNumStr, data.driverName,
-      data.shift || "", data.trip || "", // सिफ्ट र ट्रिप थपियो
+      data.shift || "", data.trip || "", 
       curLit, data.dRate || 0, curAmt,
       todayKMInput, drivenKM,
       resAmt, resExp, curBal,
       newTotalLiter, newTotalDAmount, newTotalResBal, 
-      data.remarks || "", photoLink, (data.entryType === "Institution" ? (data.nepDateRaw + "|" + instOrRoute + "|" + busNumStr) : "RES_" + Utilities.getUuid())
+      data.remarks || "", photoLink, (data.entryType === "Institution" ? (nepaliDateInNepDigits + "|" + instOrRoute + "|" + busNumStr) : "RES_" + Utilities.getUuid())
     ];
 
     sheet.appendRow(rowData);
