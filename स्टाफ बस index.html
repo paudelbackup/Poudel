@@ -7,229 +7,388 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@600;800&display=swap');
-    :root { --bg: #0b0f1a; --card: #161e2d; --text: #f1f5f9; --border: #2d3748; --blue: #38bdf8; --green: #10b981; --red: #ef4444; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Mukta:wght@600;800&display=swap');
+    :root { --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --green: #4ade80; --red: #fb7185; --orange: #fb923c; --text: #f1f5f9; --border: #334155; }
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Mukta', sans-serif; }
-    body { background:var(--bg); color:var(--text); padding-bottom: 20px; }
+    body { background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
     
-    .header { padding: 15px; background: #1e293b; border-bottom: 3px solid var(--blue); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
-    .header-icons { display: flex; gap: 8px; align-items: center; }
-    
-    .container { padding: 12px; max-width: 600px; margin: auto; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
-    
-    .label { font-size: 13px; color: var(--blue); font-weight: 800; margin-bottom: 5px; display: block; text-align: center; }
-    .label i { margin-right: 5px; }
+    .header { 
+      padding: 8px 12px; background: var(--card); border-bottom: 2px solid var(--blue); 
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;
+    }
+    #bsDisplay { font-size: 14px; font-weight: 800; color: var(--green); flex: 2; text-align: left; }
+    .header-right { display: flex; gap: 5px; flex: 3; justify-content: flex-end; }
+    .head-sel { background: #0f172a; color: white; border: 1px solid var(--blue); border-radius: 5px; padding: 4px; font-size: 11px; font-weight: 800; outline: none; }
 
-    input, select, .km-box, textarea { width: 100%; height: 50px; border-radius: 10px; background: #0f172a; border: 2px solid var(--border); color: #fff; font-size: 16px; font-weight: 700; outline: none; text-align: center; display: block; }
+    .container { padding: 12px; max-width: 600px; margin: auto; }
     
-    textarea { height: 80px; padding: 10px; text-align: left; resize: none; font-size: 14px; }
+    .setting-bar { display: flex; gap: 5px; margin-bottom: 12px; }
+    .set-btn { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 8px 2px; text-align: center; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+    .set-btn i { font-size: 18px; color: var(--blue); display: block; margin-bottom: 2px; }
+    .set-btn span { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+
+    .tab-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--blue); background: rgba(56,189,248,0.1); color: var(--blue); font-weight: 800; cursor: pointer; text-align: center; }
+    .tab-btn.active { background: var(--blue); color: #000; box-shadow: 0 0 10px rgba(56,189,248,0.4); }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--blue); }
+    .label { font-size: 10px; color: var(--blue); font-weight: 800; margin-bottom: 4px; text-transform: uppercase; text-align: left; }
     
-    .km-box { border-color: var(--green); color: var(--green); display: flex; align-items: center; justify-content: center; }
-    .row-triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    input, select, .km-box { 
+      width: 100%; height: 40px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border); color: white; 
+      font-size: 14px; font-weight: 700; outline: none; padding: 0 4px; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+    }
     
-    .tab-btn { flex: 1; padding: 15px; border-radius: 10px; border: none; background: #1e293b; color: #94a3b8; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .tab-btn.active { background: var(--blue); color: #000; }
+    .km-box { border: 2px solid var(--green); color: var(--green); font-family: 'Orbitron'; display: flex; align-items: center; justify-content: center; }
     
-    .btn-save { background: linear-gradient(135deg, #06b6d4, #10b981); border: none; padding: 18px; border-radius: 15px; color: #fff; font-size: 18px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
+    .row { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 6px; margin-bottom: 10px; width: 100%; overflow: hidden; }
+    .col { flex: 1; min-width: 0; }
+
+    #photoBtn { width: 45px; height: 45px; background: rgba(56,189,248,0.1); border: 1.5px dashed var(--blue); color: var(--blue); border-radius: 8px; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+    #photoBtn img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
+
+    .btn-save { background: linear-gradient(135deg, var(--blue), var(--green)); border: none; padding: 16px; border-radius: 15px; color: #000; font-size: 18px; font-weight: 900; width: 100%; cursor: pointer; }
+
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center; }
+    .modal-content { background:var(--card); padding:20px; border-radius:15px; border:2px solid var(--blue); width:90%; max-width:320px; text-align: center; }
+    .m-list { max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; }
+    .m-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); color: white; font-weight: 600; }
     
-    .reserve-text { color: var(--red) !important; border-color: var(--red) !important; }
-    .loader-spin { border: 3px solid #f3f3f3; border-top: 3px solid var(--blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .date-pop-card { background: var(--bg); border: 1px solid var(--blue); border-radius: 10px; padding: 15px; margin-top: 10px; }
+    
+    /* सुधार ३: प्लस माइनस बटन क्लिक गर्दा एक्टिभ रङ संकेत */
+    .btn-date-adj:active { background: #fff !important; color: #000 !important; transform: scale(0.95); transition: 0.1s; }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <div id="bsDisplay" style="font-weight: 800;"><i class="fas fa-calendar-alt"></i> लोड हुँदै...</div>
-  <div class="header-icons">
-    <i class="fas fa-route" style="color: var(--blue);"></i>
-    <select id="tripSelectHeader" style="height:35px; width:85px; font-size:11px; padding:0;"></select>
-    
-    <i class="fas fa-clock" style="color: var(--blue);"></i>
-    <select id="shiftSelect" style="height:35px; width:85px; font-size:11px; padding:0;">
+  <div id="bsDisplay">लोड हुँदैछ...</div>
+  <div class="header-right">
+    <select id="tripSelectHeader" class="head-sel"><option value="">ट्रिप</option></select>
+    <select id="shiftSelect" class="head-sel">
       <option value="बिहान">बिहान</option>
       <option value="दिउँसो">दिउँसो</option>
-      <option value="दुवै">दुवै</option>
+      <option value="दुवै" selected>दुवै</option>
+      <option value="विदा">विदा</option>
     </select>
   </div>
 </div>
 
 <div class="container">
-  <div class="tab-row" style="display:flex; gap:10px; margin-bottom:15px;">
-    <button id="tInst" class="tab-btn active" onclick="switchSection('Institution')"><i class="fas fa-university"></i> नियमित संस्था</button>
-    <button id="tRes" class="tab-btn" onclick="switchSection('Reserve')"><i class="fas fa-bus-side"></i> रिजर्भ</button>
+  <div class="setting-bar">
+    <div class="set-btn" onclick="openMgr('busNumber', 'बस नम्बर सेटिङ')"><i class="fas fa-bus"></i><span>बस</span></div>
+    <div class="set-btn" onclick="openMgr('driverName', 'ड्राइभर सेटिङ')"><i class="fas fa-user-tie"></i><span>ड्राइभर</span></div>
+    <div class="set-btn" onclick="openMgr('instName', 'संस्था सेटिङ')"><i class="fas fa-university"></i><span>संस्था</span></div>
+    <div class="set-btn" onclick="openMgr('tripList', 'ट्रिप सेटिङ')"><i class="fas fa-route"></i><span>ट्रिप</span></div>
+    <div class="set-btn" onclick="openDateModal()"><i class="fas fa-calendar-alt"></i><span>गते +/-</span></div>
+  </div>
+
+  <div class="tab-row">
+    <div id="tInst" class="tab-btn active" onclick="switchSection('Institution')">नियमित संस्था</div>
+    <div id="tRes" class="tab-btn" onclick="switchSection('Reserve')">रिजर्भ सेक्सन</div>
   </div>
 
   <form id="mainForm">
     <div class="card">
-      <div class="row-triple">
-        <div class="col"><span class="label"><i class="fas fa-bus"></i> बस नं</span><select id="busNumber" onchange="fetchKM()"></select></div>
-        <div class="col"><span class="label"><i class="fas fa-user-tie"></i> ड्राइभर</span><select id="driverName"></select></div>
-        <div class="col" id="instCol"><span class="label"><i class="fas fa-building"></i> संस्था</span><select id="instName"></select></div>
-      </div>
-      
-      <div id="resFields" style="display:none;">
-        <div class="row-triple">
-           <input type="text" id="fromLoc" placeholder="कहाँबाट" class="reserve-text">
-           <input type="text" id="toLoc" placeholder="कहाँसम्म" class="reserve-text">
-           <input type="number" id="resAmt" placeholder="कुल भाडा" oninput="reCalc()" class="reserve-text">
-        </div>
-        <div class="row-triple">
-           <div class="col"><span class="label"><i class="fas fa-wallet"></i> खर्च</span><input type="number" id="resExp" oninput="reCalc()" class="reserve-text"></div>
-           <div class="col"><span class="label"><i class="fas fa-piggy-bank"></i> बचत</span><div id="resSav" class="km-box" style="color:var(--red); border-color:var(--red)">०</div></div>
-        </div>
+      <div class="row">
+        <div class="col"><div class="label">बस नम्बर</div><select id="busNumber" onchange="fetchOldKM()"></select></div>
+        <div class="col" id="instCol"><div class="label">संस्था</div><select id="instName"></select></div>
+        <div class="col"><div class="label">ड्राइभर</div><select id="driverName"></select></div>
       </div>
 
-      <div class="row-triple">
-        <div class="col"><span class="label">पहिलेको KM</span><input type="number" id="pKM" readonly style="background:#2d3748"></div>
-        <div class="col"><span class="label">आजको KM</span><input type="number" id="cKM" oninput="upKM()"></div>
-        <div class="col"><span class="label">चलेको KM</span><div id="rKM" class="km-box">०</div></div>
+      <div id="resFields" style="display:none; border-top: 1px solid #334155; padding-top: 10px; margin-top: 5px;">
+        <div class="row"><div class="col"><div class="label">कहाँबाट</div><input type="text" id="fromLoc"></div><div class="col"><div class="label">कहाँसम्म</div><input type="text" id="toLoc"></div></div>
+        <div class="row"><div class="col"><div class="label">भाडा</div><input type="number" id="resAmt" oninput="reCalc()"></div><div class="col"><div class="label">खर्च</div><input type="number" id="resExp" oninput="reCalc()"></div><div class="col"><div class="label">बचत</div><div id="resSav" class="km-box" style="color:var(--orange);">०</div></div></div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col"><div class="label">स्टार्ट KM</div><div id="oKM" class="km-box">०</div></div>
+        <div class="col"><div class="label">आजको KM</div><input type="number" id="cKM" oninput="upKM()"></div>
+        <div class="col"><div class="label">चलेको</div><div id="rKM" class="km-box" style="color:var(--blue);">०</div></div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="row-triple">
-        <div class="col"><span class="label">लिटर</span><input type="number" id="dLit" oninput="calcDiesel('L')"></div>
-        <div class="col"><span class="label">रेट</span><input type="number" id="dRat" oninput="calcDiesel('R')"></div>
-        <div class="col"><span class="label">रकम</span><input type="number" id="dAmt" oninput="calcDiesel('A')"></div>
-      </div>
-      <div class="row-triple" style="grid-template-columns: 2fr 1fr;">
-        <div class="col"><span class="label"><i class="fas fa-edit"></i> विवरण (Remarks)</span><textarea id="rem" placeholder="विवरण यहाँ लेख्नुहोस्..."></textarea></div>
-        <div class="col">
-          <span class="label"><i class="fas fa-camera"></i> फोटो</span>
-          <div id="photoBtn" onclick="document.getElementById('pFile').click()" style="height:80px;border:2px dashed var(--blue);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;"><i class="fas fa-camera fa-2x"></i><span style="font-size:10px;margin-top:5px;">Click</span></div>
-          <input type="file" id="pFile" accept="image/*" style="display:none" onchange="pv(this)">
-        </div>
-      </div>
+    <div class="card" style="border-left-color: var(--green);">
+      <div class="row"><div class="col"><div class="label">लिटर</div><input type="number" id="dLit" oninput="dfc()"></div><div class="col"><div class="label">रेट</div><input type="number" id="dRat" oninput="dfc()"></div><div class="col"><div class="label">डिजेल रकम</div><input type="number" id="dAmt" readonly></div></div>
+      <div class="row" style="align-items: flex-end;"><div class="col" style="flex:3"><div class="label">कैफियत</div><input type="text" id="rem"></div><div class="col"><div class="label">फोटो</div><div id="photoBtn" onclick="document.getElementById('pFile').click()"><i class="fas fa-camera"></i></div><input type="file" id="pFile" accept="image/*" style="display:none" onchange="pv(this)"></div></div>
     </div>
-    <button type="button" class="btn-save" id="saveBtn" onclick="saveData()">डाटा सुरक्षित गर्नुहोस्</button>
+    <button type="button" class="btn-save" onclick="saveFormRecord()">डाटा सुरक्षित गर्नुहोस्</button>
   </form>
 </div>
 
+<div id="dateModal" class="modal">
+  <div class="modal-content">
+    <h3 style="color:var(--blue); margin-bottom:15px;">मिति व्यवस्थापन</h3>
+    <div class="row">
+      <button class="btn-save btn-date-adj" style="flex:1; padding:10px;" onclick="adjustDayOnly(-1)">- १ गते</button>
+      <button class="btn-save btn-date-adj" style="flex:1; padding:10px; background:var(--orange);" onclick="adjustDayOnly(1)">+ १ गते</button>
+    </div>
+    <div class="date-pop-card">
+      <div class="label" style="text-align:center">AD क्यालेन्डरबाट छान्नुहोस्</div>
+      <input type="date" id="adPicker" onchange="pickADDate(this.value)">
+    </div>
+    <button onclick="closeDateModal()" style="width:100%; margin-top:15px; padding:10px; background:var(--red); border:none; color:white; border-radius:10px; font-weight:800;">बन्द</button>
+  </div>
+</div>
+
+<div id="mgrModal" class="modal"><div class="modal-content"><h3 id="mgrTitle"></h3><div class="row"><input type="text" id="mgrInput" style="flex:1"><button id="addBtnGlobal" onclick="addMgrItem()" style="background:var(--green); border:none; padding:0 15px; border-radius:8px; color:black; font-weight:bold;">ADD</button></div><div id="mgrList" class="m-list"></div><button onclick="closeMgr()" style="width:100%; padding:10px; background:var(--red); border:none; color:white; border-radius:10px; font-weight:bold;">CLOSE</button></div></div>
+
 <script>
-let windowData = { nepMonthName: "", nepDateRaw: "", nepDay: "", engDate: "" };
+let manualOffset = 0; 
+let baseEngDate = new Date(); 
+let dayOffsetOnly = 0; 
+const nD = ['०','१','२','३','४','५','६','७','८','९'];
+const toN = n => n.toString().replace(/\d/g, d => nD[d]);
 
-// मिति अपडेट गर्ने
-function updateBS() {
-  let d = new Date();
-  const diff = Math.floor((d - new Date("2026-04-14")) / 86400000);
-  let y = 2083, m = 1, day = diff + 1;
-  const mDays = [31, 31, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30];
-  for(let i=0; i<12; i++){ if(day > mDays[i]) { day -= mDays[i]; m++; } else break; }
-  const mNames = ["वैशाख","जेठ","असार","साउन","भदौ","असोज","कात्तिक","मंसिर","पुष","माघ","फागुन","चैत"];
-  windowData.nepMonthName = `${y} ${mNames[m-1]}`;
-  windowData.nepDateRaw = `${y}/${m < 10 ? '0'+m : m}/${day < 10 ? '0'+day : day}`;
-  windowData.nepDay = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"][d.getDay()];
-  windowData.engDate = d.toISOString().split('T')[0];
-  document.getElementById('bsDisplay').innerHTML = `<i class="fas fa-calendar-alt"></i> ${windowData.nepDateRaw} ${windowData.nepDay}`;
+let globalEntryType = "Institution";
+let serverSettingsGlobal = { busNumber: [], driverName: [], instName: [], tripList: [], lastOffset: 0 };
+
+function openDateModal() { document.getElementById('dateModal').style.display = 'flex'; }
+function closeDateModal() { document.getElementById('dateModal').style.display = 'none'; }
+
+function pickADDate(val) {
+  if(!val) return;
+  baseEngDate = new Date(val);
+  manualOffset = 0; 
+  dayOffsetOnly = 0; 
+  updateBSDate();
 }
 
-// सर्भरबाट डाटा तान्ने
-function updateDrop() {
-  google.script.run.withSuccessHandler(s => {
-    document.getElementById('busNumber').innerHTML = '<option value="">बस नं</option>' + s.busNumber.map(x=>`<option value="${x}">${x}</option>`).join('');
-    document.getElementById('driverName').innerHTML = '<option value="">ड्राइभर</option>' + s.driverName.map(x=>`<option value="${x}">${x}</option>`).join('');
-    document.getElementById('instName').innerHTML = '<option value="">संस्था</option>' + s.instName.map(x=>`<option value="${x}">${x}</option>`).join('');
-    document.getElementById('tripSelectHeader').innerHTML = '<option value="">ट्रिप</option>' + s.tripList.map(x=>`<option value="${x}">${x}</option>`).join('');
-  }).getSettingsFromServer();
+function adjustDayOnly(v) {
+  dayOffsetOnly += v;
+  updateBSDate();
 }
 
-function fetchKM() {
-  let b = document.getElementById('busNumber').value;
-  if(!b) return;
-  google.script.run.withSuccessHandler(km => {
-    document.getElementById('pKM').value = km;
-    upKM();
-  }).getLastKM(b);
-}
-
-function calcDiesel(type) {
-  let l = parseFloat(document.getElementById('dLit').value) || 0;
-  let r = parseFloat(document.getElementById('dRat').value) || 0;
-  let a = parseFloat(document.getElementById('dAmt').value) || 0;
-  if (type === 'L' || type === 'R') {
-    if (l && r) document.getElementById('dAmt').value = (l * r).toFixed(2);
-  } else if (type === 'A') {
-    if (a && r) document.getElementById('dLit').value = (a / r).toFixed(2);
+function updateBSDate() {
+  let calcD = new Date(baseEngDate);
+  calcD.setDate(calcD.getDate() + manualOffset);
+  
+  const diffTime = calcD - new Date("2026-04-14"); 
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  let y = 2083, m = 1, d = diffDays + 1;
+  const mDays = [31, 31, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30]; 
+  for(let i=0; i<12; i++){
+    if(d > mDays[i]) { d -= mDays[i]; m++; } else break;
   }
+  
+  let finalDay = d + dayOffsetOnly;
+  if(finalDay < 1) finalDay = 1; 
+  if(finalDay > mDays[m-1]) finalDay = mDays[m-1];
+  
+  const mNames = ["वैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"];
+  const dNames = ["आइतबार","सोमबार","मंगलबार","बुधबार","बिहीबार","शुक्रबार","शनिबार"];
+  
+  const currentBar = dNames[calcD.getDay()];
+  
+  const formattedBS = `${toN(y)} ${mNames[m-1]} ${toN(finalDay < 10 ? '0' + finalDay : finalDay)} ${currentBar}`;
+  document.getElementById('bsDisplay').innerText = formattedBS;
+
+  window.nepaliMonthStr = mNames[m-1];
+  window.nepaliFullRawDate = `${y}-${m < 10 ? '0' + m : m}-${finalDay < 10 ? '0' + finalDay : finalDay}`;
+  window.nepaliDayStr = currentBar;
 }
 
-function upKM() {
-  let p = parseFloat(document.getElementById('pKM').value) || 0;
-  let c = parseFloat(document.getElementById('cKM').value) || 0;
-  document.getElementById('rKM').innerText = c > p ? (c - p) : 0;
-}
-
-function switchSection(t){
-  window.currentType = t;
+function switchSection(t) {
+  globalEntryType = t;
   document.getElementById('tInst').className = t==='Institution'?'tab-btn active':'tab-btn';
   document.getElementById('tRes').className = t==='Reserve'?'tab-btn active':'tab-btn';
-  document.getElementById('instCol').style.visibility = t==='Institution'?'visible':'hidden';
+  document.getElementById('instCol').style.display = t==='Institution'?'block':'none';
   document.getElementById('resFields').style.display = t==='Reserve'?'block':'none';
+  reCalc();
 }
 
-function reCalc(){ 
-  let a=parseFloat(document.getElementById('resAmt').value)||0, e=parseFloat(document.getElementById('resExp').value)||0; 
-  document.getElementById('resSav').innerText=Math.round(a-e); 
+function pv(i) { if(i.files&&i.files[0]){const r=new FileReader(); r.onload=e=>document.getElementById('photoBtn').innerHTML=`<img src="${e.target.result}">`; r.readAsDataURL(i.files[0]);} }
+function dfc() { 
+  let l=parseFloat(document.getElementById('dLit').value)||0, r=parseFloat(document.getElementById('dRat').value)||0; 
+  document.getElementById('dAmt').value=Math.round(l*r); 
+  if(globalEntryType === "Reserve") reCalc();
 }
 
-function pv(i){ if(i.files[0]){ const r=new FileReader(); r.onload=e=>document.getElementById('photoBtn').innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;border-radius:10px;object-fit:cover;">`; r.readAsDataURL(i.files[0]); } }
-
-function saveData(){
-  const btn = document.getElementById('saveBtn');
-  const bus = document.getElementById('busNumber').value;
-  if(!bus) { Swal.fire('कृपया बस नम्बर छान्नुहोस्'); return; }
+function reCalc() { 
+  let a=parseFloat(document.getElementById('resAmt').value)||0;
+  let e=parseFloat(document.getElementById('resExp').value)||0; 
+  let dAmt = parseFloat(document.getElementById('dAmt').value)||0;
   
-  btn.disabled=true; 
-  btn.innerHTML='<span class="loader-spin"></span> सुरक्षित हुँदै...';
+  let totalSavings = (globalEntryType === "Reserve") ? (a - e - dAmt) : (a - e);
+  document.getElementById('resSav').innerText = toN(totalSavings); 
+}
 
-  const data = {
-    ...windowData, entryType: window.currentType,
-    busNumber: bus, instName: document.getElementById('instName').value || "-",
-    driverName: document.getElementById('driverName').value, trip: document.getElementById('tripSelectHeader').value || "-",
-    shift: document.getElementById('shiftSelect').value, dLiter: document.getElementById('dLit').value || 0,
-    dRate: document.getElementById('dRat').value || 0, dAmount: document.getElementById('dAmt').value || 0,
-    prevKM: document.getElementById('pKM').value || 0, currentKM: document.getElementById('cKM').value || 0,
-    fromLoc: document.getElementById('fromLoc').value || "-", toLoc: document.getElementById('toLoc').value || "-", 
-    resAmt: document.getElementById('resAmt').value || 0, resExp: document.getElementById('resExp').value || 0, 
-    remarks: document.getElementById('rem').value || "-"
+function upKM() { 
+  let s=parseFloat(toEngNum(document.getElementById('oKM').innerText))||0; 
+  let c=parseFloat(document.getElementById('cKM').value)||0; 
+  document.getElementById('rKM').innerText=toN(c>s?Math.round(c-s):0); 
+}
+
+function toEngNum(n) {
+  const nepDigits = {'०':'0','१':'1','२':'2','३':'3','४':'4','५':'5','६':'6','७':'7','८':'8','९':'9'};
+  return n.toString().replace(/[०-९]/g, d => nepDigits[d]);
+}
+
+function fetchOldKM() {
+  let bus = document.getElementById('busNumber').value;
+  if(!bus) return;
+  google.script.run.withSuccessHandler(function(km) {
+    document.getElementById('oKM').innerText = toN(km || 0);
+    upKM();
+  }).getLastKM(bus, window.nepaliMonthStr);
+}
+
+function saveFormRecord() {
+  let fileInput = document.getElementById('pFile');
+  Swal.fire({ title: 'डाटा सुरक्षित हुँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+  let calcD = new Date(baseEngDate);
+  calcD.setDate(calcD.getDate() + manualOffset);
+
+  const payload = {
+    nepMonthName: window.nepaliMonthStr,
+    nepDateRaw: window.nepaliFullRawDate,
+    nepDay: window.nepaliDayStr,
+    engDate: calcD.toISOString().split('T')[0],
+    entryType: globalEntryType,
+    busNumber: document.getElementById('busNumber').value,
+    instName: document.getElementById('instName').value,
+    driverName: document.getElementById('driverName').value,
+    shift: document.getElementById('shiftSelect').value,
+    trip: document.getElementById('tripSelectHeader').value,
+    dLiter: document.getElementById('dLit').value,
+    dRate: document.getElementById('dRat').value,
+    dAmount: document.getElementById('dAmt').value,
+    lastKM: toEngNum(document.getElementById('oKM').innerText), 
+    currentKM: document.getElementById('cKM').value,
+    routeFrom: document.getElementById('fromLoc') ? document.getElementById('fromLoc').value : "",
+    routeTo: document.getElementById('toLoc') ? document.getElementById('toLoc').value : "",
+    totalReserveAmount: document.getElementById('resAmt') ? document.getElementById('resAmt').value : "0",
+    staffAllowance: document.getElementById('resExp') ? document.getElementById('resExp').value : "0",
+    balance: toEngNum(document.getElementById('resSav').innerText),
+    remarks: document.getElementById('rem').value,
+    manualOffsetSaved: dayOffsetOnly.toString() // सुधार ३: थपघट भएको अफसेट पनि सेभ हुने
   };
-  
-  const file = document.getElementById('pFile').files[0];
-  if(file){
-    const r = new FileReader();
-    r.onload=e=>google.script.run.withSuccessHandler(res=>done(res,btn)).process(data,{base64:e.target.result.split(',')[1],mimeType:file.type});
-    r.readAsDataURL(file);
-  } else google.script.run.withSuccessHandler(res=>done(res,btn)).process(data,null);
-}
 
-// डाटा सुरक्षित भएपछि गरिने कार्यहरू (Reset & Reload)
-function done(res, btn){
-  if(res==="SUCCESS"){ 
-    Swal.fire({ icon:'success', title:'सुरक्षित भयो!', text: 'फारम रिसेट हुँदैछ...', timer: 2500, showConfirmButton: false }); 
-    
-    setTimeout(() => { 
-      // फारम पूर्ण रिसेट
-      document.getElementById('mainForm').reset();
-      document.getElementById('rKM').innerText = "०";
-      document.getElementById('resSav').innerText = "०";
-      document.getElementById('photoBtn').innerHTML = '<i class="fas fa-camera fa-2x"></i><span style="font-size:10px;margin-top:5px;">Click</span>';
-      
-      btn.disabled=false; 
-      btn.innerHTML="डाटा सुरक्षित गर्नुहोस्";
-      
-      // सिटको अन्तिम KM र ड्रपडाउन ताजा गर्न पेज रिलोड गर्ने
-      location.reload(); 
-    }, 2500);
+  if (fileInput.files && fileInput.files[0]) {
+    let file = fileInput.files[0];
+    let r = new FileReader();
+    r.onload = function(e) {
+      let bits = e.target.result.split(',');
+      let photoObj = { base64: bits[1], mimeType: file.type, fileName: file.name };
+      sendToServer(payload, photoObj);
+    };
+    r.readAsDataURL(file);
   } else {
-    Swal.fire('त्रुटि: ' + res);
-    btn.disabled=false; 
-    btn.innerHTML="डाटा सुरक्षित गर्नुहोस्";
+    sendToServer(payload, null);
   }
 }
 
-window.onload=()=>{ updateBS(); updateDrop(); switchSection('Institution'); };
+// सुधार २: सफलता म्यासेज पछि ठीक ३ सेकेन्ड होल्ड भएर फर्म मात्र रिसेट हुने लजिक
+function sendToServer(payload, photoObj) {
+  google.script.run
+    .withSuccessHandler(function(res) {
+      Swal.close();
+      if(res === "SUCCESS") {
+        Swal.fire({
+          title: 'सफलता',
+          text: 'डाटा सुरक्षित भयो !',
+          icon: 'success',
+          timer: 3000, // ३ सेकेन्ड होल्ड गर्ने
+          showConfirmButton: true
+        }).then(() => {
+          // ३ सेकेन्डपछि वा ओके थिचेपछि फर्म मात्र रिसेट (पेज लोड हुँदैन)
+          document.getElementById('mainForm').reset();
+          document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
+          document.getElementById('shiftSelect').value = "दुवै";
+          document.getElementById('resSav').innerText = "०";
+          document.getElementById('rKM').innerText = "०";
+          document.getElementById('oKM').innerText = "०";
+          loadServerSettings();
+        });
+      } else {
+        Swal.fire('त्रुटि', res, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      Swal.close();
+      Swal.fire('त्रुटि', err.toString(), 'error');
+    })
+    .process(payload, photoObj);
+}
+
+let currentKey = "";
+function openMgr(k, t) { 
+  currentKey = k; 
+  document.getElementById('mgrTitle').innerText = t; 
+  renderMgr(); 
+  document.getElementById('mgrModal').style.display = 'flex'; 
+}
+function closeMgr() { document.getElementById('mgrModal').style.display = 'none'; }
+
+function renderMgr() { 
+  let mappedKey = currentKey === 'tripList' ? 'tripList' : currentKey;
+  let items = serverSettingsGlobal[mappedKey] || [];
+  document.getElementById('mgrList').innerHTML = items.map((it, i) => 
+    `<div class="m-item"><span>${it}</span><i class="fas fa-trash" onclick="deleteMgrItem('${it}')" style="color:var(--red); cursor:pointer;"></i></div>`
+  ).join(''); 
+}
+
+function addMgrItem() { 
+  let v = document.getElementById('mgrInput').value.trim(); 
+  if(!v) return;
+  Swal.fire({ title: 'थपिँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  
+  google.script.run.withSuccessHandler(function(res) {
+    Swal.close();
+    document.getElementById('mgrInput').value = "";
+    loadServerSettings();
+  }).saveSettingToSheet(currentKey, v);
+}
+
+function deleteMgrItem(val) {
+  Swal.fire({ title: 'हटाइँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  google.script.run.withSuccessHandler(function(res) {
+    Swal.close();
+    loadServerSettings();
+  }).removeSettingFromSheet(currentKey, val);
+}
+
+function loadServerSettings() {
+  google.script.run.withSuccessHandler(function(settings) {
+    serverSettingsGlobal = settings;
+    
+    const fields = [
+      { id: 'busNumber', list: settings.busNumber, last: settings.lastBus, label: 'छान्नुहोस्' },
+      { id: 'driverName', list: settings.driverName, last: settings.lastDriver, label: 'छान्नुहोस्' },
+      { id: 'instName', list: settings.instName, last: settings.lastInstitution, label: 'छान्नुहोस्' },
+      { id: 'tripSelectHeader', list: settings.tripList, last: settings.lastTrip, label: 'ट्रिप' }
+    ];
+    
+    fields.forEach(f => {
+      let el = document.getElementById(f.id);
+      if(el) {
+        let html = `<option value="">${f.label}</option>`;
+        f.list.forEach(item => {
+          let selected = (f.last && f.last.toString().trim() === item.toString().trim()) ? 'selected' : '';
+          html += `<option value="${item}" ${selected}>${item}</option>`;
+        });
+        el.innerHTML = html;
+      }
+    });
+    
+    if(settings.lastOffset) {
+      dayOffsetOnly = parseInt(settings.lastOffset) || 0;
+      updateBSDate();
+    }
+    
+    if(currentKey) renderMgr();
+    fetchOldKM();
+  }).getSettings();
+}
+
+window.onload = () => {
+  updateBSDate();
+  loadServerSettings();
+};
 </script>
 </body>
 </html>
