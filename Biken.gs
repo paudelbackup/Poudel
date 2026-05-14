@@ -8,10 +8,12 @@ function doGet() {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+// सेटिङ र ब्याकअपहरू गुगल सिटबाट तान्ने
 function getSettings() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName("Add Setting") || ss.insertSheet("Add Setting");
   const data = sheet.getDataRange().getValues();
+  
   const settings = { busNumber: [], driverName: [], instName: [], tripList: [], lastOffset: 0 };
   
   for (let i = 1; i < data.length; i++) {
@@ -32,6 +34,7 @@ function getSettings() {
       if (row[0] === "Manual_Offset") settings.lastOffset = parseInt(row[1]) || 0;
     });
   }
+  
   return settings;
 }
 
@@ -39,11 +42,15 @@ function saveSettingToSheet(key, value) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName("Add Setting") || ss.insertSheet("Add Setting");
   const col = (key === 'busNumber') ? 1 : (key === 'driverName' ? 2 : (key === 'instName' ? 3 : 4));
+  
   const lastRow = sheet.getLastRow();
   if (lastRow > 0) {
     const data = sheet.getRange(1, col, lastRow).getValues();
-    for (let i = 0; i < data.length; i++) { if (data[i][0].toString().trim() === value.toString().trim()) return "EXISTS"; }
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][0].toString().trim() === value.toString().trim()) return "EXISTS";
+    }
   }
+  
   sheet.getRange(sheet.getLastRow() + 1, col).setValue(value);
   return "SAVED";
 }
@@ -75,6 +82,7 @@ function toNepNum(n) {
   return n.toString().replace(/\d/g, d => nepDigits[d]);
 }
 
+// सुधारेको फङ्ग्सन: सिटमा नेपाली अङ्क भए पनि अंग्रेजीमा कन्भर्ट गरेर सही KM तान्नेछ
 function getLastKM(busNumber, currentMonthName) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const months = ["वैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"];
@@ -87,9 +95,8 @@ function getLastKM(busNumber, currentMonthName) {
     if (sheet) {
       let data = sheet.getDataRange().getValues();
       for (let j = data.length - 1; j >= 1; j--) {
-        // यहाँ तोEngNum ले नेपाली अङ्क भए पनि अङ्ग्रेजीमा बदलेर चेक गर्छ
         if (toEngNum(data[j][5]).toString().trim() === searchBus) {
-          let lastKM = parseFloat(toEngNum(data[j][12])); 
+          let lastKM = parseFloat(toEngNum(data[j][12])); // सिटको १२औँ कोलम (आजको KM) बाट तान्छ
           if (!isNaN(lastKM) && lastKM > 0) return lastKM;
         }
       }
@@ -98,16 +105,16 @@ function getLastKM(busNumber, currentMonthName) {
   return 0;
 }
 
-// गते परिवर्तन गर्दा सिधै सेटिङमा सेभ गर्ने फङ्ग्सन
+// नयाँ फङ्ग्सन: गते चेन्ज हुने बित्तिकै सिधै Last_Settings मा सेभ गर्ने
 function saveDateOffset(offset) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     let sSheet = ss.getSheetByName("Last_Settings") || ss.insertSheet("Last_Settings");
     let data = sSheet.getDataRange().getValues();
     let found = false;
-    for(let i=0; i<data.length; i++) {
+    for(let i = 0; i < data.length; i++) {
       if(data[i][0] === "Manual_Offset") {
-        sSheet.getRange(i+1, 2).setValue(offset);
+        sSheet.getRange(i + 1, 2).setValue(offset);
         found = true; break;
       }
     }
@@ -125,31 +132,61 @@ function process(data, photoObj) {
     let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
     
     const headers = ["मिति (BS)", "बार", "मिति (AD)", "प्रकार", "संस्था/रुट", "बस नं", "ड्राइभर", "सिफ्ट", "ट्रिप", "लिटर", "रेट", "डिजल रकम", "आजको KM", "चलेको KM", "रिजर्भ रकम", "बैना/खर्च", "बचत", "कुल डिजेल लिटर", "कुल डिजेल रकम", "कुल रिजर्भ बचत", "विवरण", "फोटो", "KEY"];
+    
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#22c55e").setFontColor("white").setHorizontalAlignment("center");
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#22c55e").setFontColor("white").setHorizontalAlignment("center").setVerticalAlignment("middle");
       sheet.setFrozenRows(1);
     }
 
+    const lastRow = sheet.getLastRow();
+
     const curLit = parseFloat(toEngNum(data.dLiter)) || 0;
     const curAmt = parseFloat(toEngNum(data.dAmount)) || 0;
+    
     const resAmt = parseFloat(toEngNum(data.totalReserveAmount)) || 0;
     const resExp = parseFloat(toEngNum(data.staffAllowance)) || 0;
-    let curBal = (data.entryType === "Reserve") ? (resAmt - resExp - curAmt) : (parseFloat(toEngNum(data.balance)) || 0);
+    let curBal = 0;
+    if (data.entryType === "Reserve") {
+      curBal = resAmt - resExp - curAmt; 
+    } else {
+      curBal = parseFloat(toEngNum(data.balance)) || 0;
+    }
 
     const busNumStr = data.busNumber.toString().trim();
     const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
-    const lastKMVal = parseFloat(toEngNum(data.lastKM)) || 0;
-    const todayKMInput = parseFloat(toEngNum(data.currentKM)) || 0;
-    let drivenKM = (todayKMInput > lastKMVal) ? (todayKMInput - lastKMVal) : 0;
-    const nepaliDateInNepDigits = toNepNum(data.nepDateRaw);
 
+    let prevTotalLiter = 0;
+    let prevTotalDAmount = 0;
+    let prevTotalResBal = 0;
+
+    if (lastRow > 1) {
+      const fullData = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+      for (let i = 0; i < fullData.length; i++) {
+        if (fullData[i][5].toString().trim() === busNumStr && fullData[i][4].toString().trim() === instOrRoute) {
+          prevTotalLiter += parseFloat(fullData[i][17]) || 0; 
+          prevTotalDAmount += parseFloat(fullData[i][18]) || 0;
+          prevTotalResBal += parseFloat(fullData[i][19]) || 0;
+        }
+      }
+    }
+
+    const newTotalLiter = prevTotalLiter + curLit;
+    const newTotalDAmount = prevTotalDAmount + curAmt;
+    const newTotalResBal = prevTotalResBal + curBal;
+    
     let photoLink = "फोटो छैन";
     if (photoObj && photoObj.base64) {
       const folder = DriveApp.getFolderById(FOLDER_ID);
       const blob = Utilities.newBlob(Utilities.base64Decode(photoObj.base64), photoObj.mimeType, photoObj.fileName);
       photoLink = '=HYPERLINK("' + folder.createFile(blob).getUrl() + '", "फोटो हेर्नुहोस्")';
     }
+
+    const lastKMVal = parseFloat(toEngNum(data.lastKM)) || 0;
+    const todayKMInput = parseFloat(toEngNum(data.currentKM)) || 0;
+    let drivenKM = (todayKMInput > lastKMVal) ? (todayKMInput - lastKMVal) : 0;
+
+    const nepaliDateInNepDigits = toNepNum(data.nepDateRaw);
 
     const rowData = [
       nepaliDateInNepDigits, data.nepDay, data.engDate, 
@@ -159,13 +196,34 @@ function process(data, photoObj) {
       curLit, data.dRate || 0, curAmt,
       todayKMInput, drivenKM,
       resAmt, resExp, curBal,
-      "", "", "", // कुल हिसाब पछि सिटमै फर्मुलाबाट मिलाउन सकिन्छ
+      newTotalLiter, newTotalDAmount, newTotalResBal, 
       data.remarks || "", photoLink, (data.entryType === "Institution" ? (nepaliDateInNepDigits + "|" + instOrRoute + "|" + busNumStr) : "RES_" + Utilities.getUuid())
     ];
 
     sheet.appendRow(rowData);
+    const nLastRow = sheet.getLastRow();
+    const range = sheet.getRange(nLastRow, 1, 1, headers.length);
+    range.setHorizontalAlignment("center").setVerticalAlignment("middle");
+
+    if (data.shiftColor) {
+      sheet.getRange(nLastRow, 5).setFontColor(data.shiftColor).setFontWeight("bold");
+    }
+
+    if (data.entryType === "Reserve") {
+      range.setFontColor("#ff0000").setFontWeight("bold");
+    }
+
+    if (nLastRow > 1) {
+      sheet.getRange(2, 1, nLastRow - 1, headers.length).sort({column: 1, ascending: true});
+    }
+
     sheet.autoResizeColumns(1, headers.length);
+    for (let col = 1; col <= headers.length; col++) {
+      sheet.setColumnWidth(col, sheet.getColumnWidth(col) + 35); 
+    }
+
     saveLastActiveSettings(data);
+
     return "SUCCESS";
   } catch (e) { return "Error: " + e.toString(); }
   finally { lock.releaseLock(); }
@@ -175,15 +233,14 @@ function saveLastActiveSettings(data) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     let sSheet = ss.getSheetByName("Last_Settings") || ss.insertSheet("Last_Settings");
-    // यहाँ हामी पहिले नै भएका कुरा अपडेट गर्छौँ, clear गर्दैनौं ताकि Manual_Offset नहटोस्
     let existingData = sSheet.getDataRange().getValues();
     let updates = { "Last_Bus": data.busNumber, "Last_Driver": data.driverName, "Last_Institution": data.instName, "Last_Trip": data.trip, "Manual_Offset": data.manualOffsetSaved };
     
     for (let key in updates) {
       let found = false;
-      for (let i=0; i<existingData.length; i++) {
+      for (let i = 0; i < existingData.length; i++) {
         if (existingData[i][0] === key) {
-          sSheet.getRange(i+1, 2).setValue(updates[key]);
+          sSheet.getRange(i + 1, 2).setValue(updates[key]);
           found = true; break;
         }
       }
