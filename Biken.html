@@ -57,7 +57,6 @@
     
     .date-pop-card { background: var(--bg); border: 1px solid var(--blue); border-radius: 10px; padding: 15px; margin-top: 10px; }
     
-    /* सुधार ३: प्लस माइनस बटन क्लिक गर्दा एक्टिभ रङ संकेत */
     .btn-date-adj:active { background: #fff !important; color: #000 !important; transform: scale(0.95); transition: 0.1s; }
   </style>
 </head>
@@ -111,7 +110,11 @@
     </div>
 
     <div class="card" style="border-left-color: var(--green);">
-      <div class="row"><div class="col"><div class="label">लिटर</div><input type="number" id="dLit" oninput="dfc()"></div><div class="col"><div class="label">रेट</div><input type="number" id="dRat" oninput="dfc()"></div><div class="col"><div class="label">डिजेल रकम</div><input type="number" id="dAmt" readonly></div></div>
+      <div class="row">
+        <div class="col"><div class="label">लिटर</div><input type="number" id="dLit" oninput="dfc('lit')"></div>
+        <div class="col"><div class="label">रेट</div><input type="number" id="dRat" oninput="dfc('rat')"></div>
+        <div class="col"><div class="label">डिजेल रकम</div><input type="number" id="dAmt" oninput="dfc('amt')"></div>
+      </div>
       <div class="row" style="align-items: flex-end;"><div class="col" style="flex:3"><div class="label">कैफियत</div><input type="text" id="rem"></div><div class="col"><div class="label">फोटो</div><div id="photoBtn" onclick="document.getElementById('pFile').click()"><i class="fas fa-camera"></i></div><input type="file" id="pFile" accept="image/*" style="display:none" onchange="pv(this)"></div></div>
     </div>
     <button type="button" class="btn-save" onclick="saveFormRecord()">डाटा सुरक्षित गर्नुहोस्</button>
@@ -156,9 +159,11 @@ function pickADDate(val) {
   updateBSDate();
 }
 
+// सुधारेको लजिक: गते +/- गर्ने बित्तिकै सर्भरको Last_Settings मा सेभ हुन्छ
 function adjustDayOnly(v) {
   dayOffsetOnly += v;
   updateBSDate();
+  google.script.run.saveDateOffset(dayOffsetOnly);
 }
 
 function updateBSDate() {
@@ -201,9 +206,24 @@ function switchSection(t) {
 }
 
 function pv(i) { if(i.files&&i.files[0]){const r=new FileReader(); r.onload=e=>document.getElementById('photoBtn').innerHTML=`<img src="${e.target.result}">`; r.readAsDataURL(i.files[0]);} }
-function dfc() { 
-  let l=parseFloat(document.getElementById('dLit').value)||0, r=parseFloat(document.getElementById('dRat').value)||0; 
-  document.getElementById('dAmt').value=Math.round(l*r); 
+
+// सुधारेको लजिक: डिजेल सेक्सनको ३ मध्ये जुनसुकै २ वटा हाल्दा तेस्रो आफै हिसाब हुने
+function dfc(changedField) { 
+  let l = parseFloat(document.getElementById('dLit').value);
+  let r = parseFloat(document.getElementById('dRat').value); 
+  let a = parseFloat(document.getElementById('dAmt').value);
+
+  if (changedField === 'lit' || changedField === 'rat') {
+    if (!isNaN(l) && !isNaN(r)) {
+      document.getElementById('dAmt').value = Math.round(l * r);
+    }
+  } else if (changedField === 'amt') {
+    if (!isNaN(a) && !isNaN(r) && r !== 0) {
+      document.getElementById('dLit').value = (a / r).toFixed(2);
+    } else if (!isNaN(a) && !isNaN(l) && l !== 0) {
+      document.getElementById('dRat').value = (a / l).toFixed(2);
+    }
+  }
   if(globalEntryType === "Reserve") reCalc();
 }
 
@@ -265,7 +285,7 @@ function saveFormRecord() {
     staffAllowance: document.getElementById('resExp') ? document.getElementById('resExp').value : "0",
     balance: toEngNum(document.getElementById('resSav').innerText),
     remarks: document.getElementById('rem').value,
-    manualOffsetSaved: dayOffsetOnly.toString() // सुधार ३: थपघट भएको अफसेट पनि सेभ हुने
+    manualOffsetSaved: dayOffsetOnly.toString() 
   };
 
   if (fileInput.files && fileInput.files[0]) {
@@ -282,7 +302,6 @@ function saveFormRecord() {
   }
 }
 
-// सुधार २: सफलता म्यासेज पछि ठीक ३ सेकेन्ड होल्ड भएर फर्म मात्र रिसेट हुने लजिक
 function sendToServer(payload, photoObj) {
   google.script.run
     .withSuccessHandler(function(res) {
@@ -292,10 +311,9 @@ function sendToServer(payload, photoObj) {
           title: 'सफलता',
           text: 'डाटा सुरक्षित भयो !',
           icon: 'success',
-          timer: 3000, // ३ सेकेन्ड होल्ड गर्ने
+          timer: 3000, 
           showConfirmButton: true
         }).then(() => {
-          // ३ सेकेन्डपछि वा ओके थिचेपछि फर्म मात्र रिसेट (पेज लोड हुँदैन)
           document.getElementById('mainForm').reset();
           document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
           document.getElementById('shiftSelect').value = "दुवै";
