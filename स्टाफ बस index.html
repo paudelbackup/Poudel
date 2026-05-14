@@ -57,7 +57,7 @@
     
     .date-pop-card { background: var(--bg); border: 1px solid var(--blue); border-radius: 10px; padding: 15px; margin-top: 10px; }
     
-    /* सुधार ३: प्लस माइनस बटन क्लिक गर्दा एक्टिभ रङ संकेत */
+    /* प्लस माइनस बटन क्लिक गर्दा एक्टिभ संकेत */
     .btn-date-adj:active { background: #fff !important; color: #000 !important; transform: scale(0.95); transition: 0.1s; }
   </style>
 </head>
@@ -265,7 +265,7 @@ function saveFormRecord() {
     staffAllowance: document.getElementById('resExp') ? document.getElementById('resExp').value : "0",
     balance: toEngNum(document.getElementById('resSav').innerText),
     remarks: document.getElementById('rem').value,
-    manualOffsetSaved: dayOffsetOnly.toString() // सुधार ३: थपघट भएको अफसेट पनि सेभ हुने
+    manualOffsetSaved: dayOffsetOnly.toString() 
   };
 
   if (fileInput.files && fileInput.files[0]) {
@@ -282,7 +282,7 @@ function saveFormRecord() {
   }
 }
 
-// सुधार २: सफलता म्यासेज पछि ठीक ३ सेकेन्ड होल्ड भएर फर्म मात्र रिसेट हुने लजिक
+// सफलता सन्देश पछि ३ सेकेन्ड होल्ड भएर एपको फर्म मात्र रिसेट हुने लजिक
 function sendToServer(payload, photoObj) {
   google.script.run
     .withSuccessHandler(function(res) {
@@ -292,10 +292,10 @@ function sendToServer(payload, photoObj) {
           title: 'सफलता',
           text: 'डाटा सुरक्षित भयो !',
           icon: 'success',
-          timer: 3000, // ३ सेकेन्ड होल्ड गर्ने
+          timer: 3000, 
           showConfirmButton: true
         }).then(() => {
-          // ३ सेकेन्डपछि वा ओके थिचेपछि फर्म मात्र रिसेट (पेज लोड हुँदैन)
+          // फर्म मात्र रिसेट (पेज रिफ्रेस हुँदैन)
           document.getElementById('mainForm').reset();
           document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
           document.getElementById('shiftSelect').value = "दुवै";
