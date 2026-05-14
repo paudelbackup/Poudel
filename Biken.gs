@@ -87,7 +87,7 @@ function process(data, photoObj) {
     const sheetName = "२०८३ " + data.nepMonthName;
     let sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
     
-    const headers = ["मिति (BS)", "बार", "मिति (AD)", "प्रकार", "संस्था/रुट", "बस नं", "ड्राइभर", "लिटर", "रेट", "डिजल रकम", "आजको KM", "चलेको KM", "रिजर्भ रकम", "बैना/खर्च", "बचत", "कुल डिजल लिटर", "कुल डिजल रकम", "कुल रिजर्भ बचत", "विवरण", "फोटो", "KEY"];
+    const headers = ["मिति (BS)", "बार", "मिति (AD)", "प्रकार", "संस्था/रुट", "बस नं", "ड्राइभर", "लिटर", "रेट", "डिजल रकम", "आजको KM", "चलेको KM", "रिजर्भ रकम", "बैना/खर्च", "बचत", "कुल डिजेल लिटर", "कुल डिजेल रकम", "कुल रिजर्भ बचत", "विवरण", "फोटो", "KEY"];
     
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(headers);
@@ -97,29 +97,42 @@ function process(data, photoObj) {
 
     const lastRow = sheet.getLastRow();
 
-    // --- P, Q, R कोलमको लागि अघिल्लो टोटल तान्ने लजिक ---
+    // मानहरू तान्ने
+    const curLit = parseFloat(toEngNum(data.dLiter)) || 0;
+    const curAmt = parseFloat(toEngNum(data.dAmount)) || 0;
+    
+    // सुधार २: रिजर्भ सेक्सन नाफा हिसाब = भाडा - खर्च - डिजेल रकम
+    const resAmt = parseFloat(toEngNum(data.totalReserveAmount)) || 0;
+    const resExp = parseFloat(toEngNum(data.staffAllowance)) || 0;
+    let curBal = 0;
+    if (data.entryType === "Reserve") {
+      curBal = resAmt - resExp - curAmt; // भाडा - खर्च - डिजेल रकम
+    } else {
+      curBal = parseFloat(toEngNum(data.balance)) || 0;
+    }
+
+    const busNumStr = data.busNumber.toString().trim();
+    const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
+
+    // सुधार ३: बस र संस्था मिल्दा मात्र विधागत ब्याकअप (रनिङ टोटल) हिसाब गर्ने
     let prevTotalLiter = 0;
     let prevTotalDAmount = 0;
     let prevTotalResBal = 0;
 
     if (lastRow > 1) {
-      const lastTotals = sheet.getRange(lastRow, 16, 1, 3).getValues()[0]; 
-      prevTotalLiter = parseFloat(lastTotals[0]) || 0;
-      prevTotalDAmount = parseFloat(lastTotals[1]) || 0;
-      prevTotalResBal = parseFloat(lastTotals[2]) || 0;
+      const fullData = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+      for (let i = 0; i < fullData.length; i++) {
+        if (fullData[i][5].toString().trim() === busNumStr && fullData[i][4].toString().trim() === instOrRoute) {
+          prevTotalLiter += parseFloat(fullData[i][7]) || 0;
+          prevTotalDAmount += parseFloat(fullData[i][9]) || 0;
+          prevTotalResBal += parseFloat(fullData[i][14]) || 0;
+        }
+      }
     }
-
-    // नयाँ मानहरू
-    const curLit = parseFloat(toEngNum(data.dLiter)) || 0;
-    const curAmt = parseFloat(toEngNum(data.dAmount)) || 0;
-    const curBal = parseFloat(toEngNum(data.balance)) || 0;
 
     const newTotalLiter = prevTotalLiter + curLit;
     const newTotalDAmount = prevTotalDAmount + curAmt;
     const newTotalResBal = prevTotalResBal + curBal;
-
-    const instOrRoute = (data.entryType === "Institution" ? data.instName : data.routeFrom + " - " + data.routeTo);
-    const busNumStr = data.busNumber.toString().trim();
     
     let photoLink = "फोटो छैन";
     if (photoObj && photoObj.base64) {
@@ -138,7 +151,7 @@ function process(data, photoObj) {
       instOrRoute, busNumStr, data.driverName,
       curLit, data.dRate || 0, curAmt,
       todayKMInput, drivenKM,
-      data.totalReserveAmount || 0, data.staffAllowance || 0, curBal,
+      resAmt, resExp, curBal,
       newTotalLiter, newTotalDAmount, newTotalResBal, 
       data.remarks || "", photoLink, (data.entryType === "Institution" ? (data.nepDateRaw + "|" + instOrRoute + "|" + busNumStr) : "RES_" + Utilities.getUuid())
     ];
@@ -165,7 +178,25 @@ function process(data, photoObj) {
       sheet.setColumnWidth(col, sheet.getColumnWidth(col) + 35); 
     }
 
+    // सुधार ४: बस, ड्राइभर, संस्था, ट्रिप र अन्तिम गतेको ब्याकअप 'Last_Settings' मा राख्ने
+    saveLastActiveSettings(data);
+
     return "SUCCESS";
   } catch (e) { return "Error: " + e.toString(); }
   finally { lock.releaseLock(); }
+}
+
+// सुधार ४: अन्तिम गते र सेटिङहरू ब्याकअप राख्ने फंक्शन
+function saveLastActiveSettings(data) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sSheet = ss.getSheetByName("Last_Settings") || ss.insertSheet("Last_Settings");
+    sSheet.clearContents();
+    sSheet.appendRow(["Parameter", "Value"]);
+    sSheet.appendRow(["Last_Bus", data.busNumber || ""]);
+    sSheet.appendRow(["Last_Driver", data.driverName || ""]);
+    sSheet.appendRow(["Last_Institution", data.instName || ""]);
+    sSheet.appendRow(["Last_Trip", data.trip || ""]);
+    sSheet.appendRow(["Manual_Offset", data.manualOffsetSaved || "0"]);
+  } catch(e){}
 }
