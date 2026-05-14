@@ -20,7 +20,8 @@
     .header-right { display: flex; gap: 5px; flex: 3; justify-content: flex-end; }
     .head-sel { background: #0f172a; color: white; border: 1px solid var(--blue); border-radius: 5px; padding: 4px; font-size: 11px; font-weight: 800; outline: none; }
 
-    .container { padding: 10px; max-width: 600px; margin: auto; }
+    /* सुधार १: दुई छेउमा पर्फेक्ट ग्याप राख्ने ओरिजिनल कन्टेनर */
+    .container { padding: 12px; max-width: 600px; margin: auto; }
     
     .setting-bar { display: flex; gap: 5px; margin-bottom: 12px; }
     .set-btn { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 8px 2px; text-align: center; border-radius: 10px; cursor: pointer; transition: 0.2s; }
@@ -33,10 +34,18 @@
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--blue); }
     .label { font-size: 10px; color: var(--blue); font-weight: 800; margin-bottom: 4px; text-transform: uppercase; text-align: left; }
-    input, select, .km-box { width: 100%; height: 40px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border); color: white; font-size: 14px; font-weight: 700; outline: none; padding: 0 8px; text-align: center; }
+    
+    /* सुधार १: डेटा जतिसुकै लामो भए पनि होरिजन्टलमै सिधा बस्ने (No Double Row/Wrap) र टेक्स्ट सेन्टर हुने संरचना */
+    input, select, .km-box { 
+      width: 100%; height: 40px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border); color: white; 
+      font-size: 14px; font-weight: 700; outline: none; padding: 0 4px; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+    }
+    
     .km-box { border: 2px solid var(--green); color: var(--green); font-family: 'Orbitron'; display: flex; align-items: center; justify-content: center; }
     
-    .row { display: flex; gap: 6px; margin-bottom: 10px; width: 100%; }
+    /* सुधार १: एउटै होरिजन्टल लाइनमा नटुटाई देखाउन फ्लेक्स रो नो-र्याप */
+    .row { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 6px; margin-bottom: 10px; width: 100%; overflow: hidden; }
     .col { flex: 1; min-width: 0; }
 
     #photoBtn { width: 45px; height: 45px; background: rgba(56,189,248,0.1); border: 1.5px dashed var(--blue); color: var(--blue); border-radius: 8px; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -63,7 +72,7 @@
     <select id="shiftSelect" class="head-sel">
       <option value="बिहान">बिहान</option>
       <option value="दिउँसो">दिउँसो</option>
-      <option value="दुवै">दुवै</option>
+      <option value="दुवै" selected>दुवै</option>
       <option value="विदा">विदा</option>
     </select>
   </div>
@@ -107,7 +116,7 @@
       <div class="row"><div class="col"><div class="label">लिटर</div><input type="number" id="dLit" oninput="dfc()"></div><div class="col"><div class="label">रेट</div><input type="number" id="dRat" oninput="dfc()"></div><div class="col"><div class="label">डिजेल रकम</div><input type="number" id="dAmt" readonly></div></div>
       <div class="row" style="align-items: flex-end;"><div class="col" style="flex:3"><div class="label">कैफियत</div><input type="text" id="rem"></div><div class="col"><div class="label">फोटो</div><div id="photoBtn" onclick="document.getElementById('pFile').click()"><i class="fas fa-camera"></i></div><input type="file" id="pFile" accept="image/*" style="display:none" onchange="pv(this)"></div></div>
     </div>
-    <button type="button" class="btn-save" onclick="saveData()">डाटा सुरक्षित गर्नुहोस्</button>
+    <button type="button" class="btn-save" onclick="saveFormRecord()">डाटा सुरक्षित गर्नुहोस्</button>
   </form>
 </div>
 
@@ -130,38 +139,37 @@
 
 <script>
 let manualOffset = 0; 
-let baseEngDate = new Date(); // Today's date as starting point
+let baseEngDate = new Date(); 
 const nD = ['०','१','२','३','४','५','६','७','८','९'];
 const toN = n => n.toString().replace(/\d/g, d => nD[d]);
+
+let globalEntryType = "Institution";
 
 function openDateModal() { document.getElementById('dateModal').style.display = 'flex'; }
 function closeDateModal() { document.getElementById('dateModal').style.display = 'none'; }
 
-// Function to handle Calendar Selection
 function pickADDate(val) {
   if(!val) return;
   baseEngDate = new Date(val);
-  manualOffset = 0; // Reset manual offset when calendar is used
+  manualOffset = 0; 
   updateBSDate();
 }
 
-// Function to handle +/- Buttons
 function adjustDay(v) {
   manualOffset += v;
   updateBSDate();
 }
 
+// सुधार ४: गते मात्र फेरबदल हुने र बार प्रस्ट रूपमा क्यालकुलेट हुने ओरिजिनल लजिक
 function updateBSDate() {
   let calcD = new Date(baseEngDate);
   calcD.setDate(calcD.getDate() + manualOffset);
   
-  // BS Conversion Logic (Simple Anchor based for 2083 Jeth)
-  const anchorDate = new Date("2026-05-13"); // May 13 2026 = 2083 Jeth 30 (Example)
-  const diffTime = calcD - new Date("2026-04-14"); // Baisakh 1 2083
+  const diffTime = calcD - new Date("2026-04-14"); 
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
   let y = 2083, m = 1, d = diffDays + 1;
-  const mDays = [31, 31, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30]; // 2083 approx
+  const mDays = [31, 31, 31, 32, 31, 30, 30, 30, 29, 30, 29, 30]; 
   for(let i=0; i<12; i++){
     if(d > mDays[i]) { d -= mDays[i]; m++; } else break;
   }
@@ -171,22 +179,108 @@ function updateBSDate() {
   
   const formattedBS = `${toN(y)} ${mNames[m-1]} ${toN(d < 10 ? '0' + d : d)} ${dNames[calcD.getDay()]}`;
   document.getElementById('bsDisplay').innerText = formattedBS;
+
+  window.nepaliMonthStr = mNames[m-1];
+  window.nepaliFullRawDate = `${y}-${m < 10 ? '0' + m : m}-${d < 10 ? '0' + d : d}`;
+  window.nepaliDayStr = dNames[calcD.getDay()];
 }
 
-// Rest of your functions (Switch, PV, DFC, RC, UKM, MGR)
 function switchSection(t) {
+  globalEntryType = t;
   document.getElementById('tInst').className = t==='Institution'?'tab-btn active':'tab-btn';
   document.getElementById('tRes').className = t==='Reserve'?'tab-btn active':'tab-btn';
   document.getElementById('instCol').style.display = t==='Institution'?'block':'none';
   document.getElementById('resFields').style.display = t==='Reserve'?'block':'none';
+  reCalc();
 }
 
 function pv(i) { if(i.files&&i.files[0]){const r=new FileReader(); r.onload=e=>document.getElementById('photoBtn').innerHTML=`<img src="${e.target.result}">`; r.readAsDataURL(i.files[0]);} }
-function dfc() { let l=parseFloat(document.getElementById('dLit').value)||0, r=parseFloat(document.getElementById('dRat').value)||0; document.getElementById('dAmt').value=Math.round(l*r); }
-function reCalc() { let a=parseFloat(document.getElementById('resAmt').value)||0, e=parseFloat(document.getElementById('resExp').value)||0; document.getElementById('resSav').innerText=toN(a-e); }
+function dfc() { 
+  let l=parseFloat(document.getElementById('dLit').value)||0, r=parseFloat(document.getElementById('dRat').value)||0; 
+  document.getElementById('dAmt').value=Math.round(l*r); 
+  if(globalEntryType === "Reserve") reCalc();
+}
+
+// सुधार २: रिजर्भको वास्तविक नाफा निकालिने फर्मुला: भाडा - खर्च - डिजेल रकम
+function reCalc() { 
+  let a=parseFloat(document.getElementById('resAmt').value)||0;
+  let e=parseFloat(document.getElementById('resExp').value)||0; 
+  let dAmt = parseFloat(document.getElementById('dAmt').value)||0;
+  
+  let totalSavings = (globalEntryType === "Reserve") ? (a - e - dAmt) : (a - e);
+  document.getElementById('resSav').innerText = toN(totalSavings); 
+}
+
 function upKM() { let s=0, c=parseFloat(document.getElementById('cKM').value)||0; document.getElementById('rKM').innerText=toN(c>s?Math.round(c-s):0); }
 
-// MGR logic same as before...
+function saveFormRecord() {
+  let fileInput = document.getElementById('pFile');
+  Swal.fire({ title: 'डाटा सुरक्षित हुँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+  let calcD = new Date(baseEngDate);
+  calcD.setDate(calcD.getDate() + manualOffset);
+
+  const payload = {
+    nepMonthName: window.nepaliMonthStr,
+    nepDateRaw: window.nepaliFullRawDate,
+    nepDay: window.nepaliDayStr,
+    engDate: calcD.toISOString().split('T')[0],
+    entryType: globalEntryType,
+    busNumber: document.getElementById('busNumber').value,
+    instName: document.getElementById('instName').value,
+    driverName: document.getElementById('driverName').value,
+    shift: document.getElementById('shiftSelect').value,
+    trip: document.getElementById('tripSelectHeader').value,
+    dLiter: document.getElementById('dLit').value,
+    dRate: document.getElementById('dRat').value,
+    dAmount: document.getElementById('dAmt').value,
+    lastKM: "0", 
+    currentKM: document.getElementById('cKM').value,
+    routeFrom: document.getElementById('fromLoc') ? document.getElementById('fromLoc').value : "",
+    routeTo: document.getElementById('toLoc') ? document.getElementById('toLoc').value : "",
+    totalReserveAmount: document.getElementById('resAmt') ? document.getElementById('resAmt').value : "0",
+    staffAllowance: document.getElementById('resExp') ? document.getElementById('resExp').value : "0",
+    balance: document.getElementById('resSav').innerText,
+    remarks: document.getElementById('rem').value,
+    manualOffsetSaved: manualOffset.toString()
+  };
+
+  if (fileInput.files && fileInput.files[0]) {
+    let file = fileInput.files[0];
+    let r = new FileReader();
+    r.onload = function(e) {
+      let bits = e.target.result.split(',');
+      let photoObj = { base64: bits[1], mimeType: file.type, fileName: file.name };
+      sendToServer(payload, photoObj);
+    };
+    r.readAsDataURL(file);
+  } else {
+    sendToServer(payload, null);
+  }
+}
+
+function sendToServer(payload, photoObj) {
+  google.script.run
+    .withSuccessHandler(function(res) {
+      Swal.close();
+      if(res === "SUCCESS") {
+        Swal.fire('सफलता', 'डाटा सुरक्षित भयो !', 'success');
+        document.getElementById('mainForm').reset();
+        document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
+        document.getElementById('shiftSelect').value = "दुवै";
+        document.getElementById('resSav').innerText = "०";
+        document.getElementById('rKM').innerText = "०";
+      } else {
+        Swal.fire('त्रुटि', res, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      Swal.close();
+      Swal.fire('त्रुटि', err.toString(), 'error');
+    })
+    .process(payload, photoObj);
+}
+
 let currentKey = "";
 function openMgr(k, t) { currentKey=k; document.getElementById('mgrTitle').innerText=t; renderMgr(); document.getElementById('mgrModal').style.display='flex'; }
 function closeMgr() { document.getElementById('mgrModal').style.display='none'; }
