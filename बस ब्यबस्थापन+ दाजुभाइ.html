@@ -85,7 +85,7 @@
     
     <div id="nameArea" style="display:grid; grid-template-columns: 1fr; gap:8px; margin-top:2px;">
        <div id="boxP1"><label id="labelP1">नाम छान्नुहोस्</label><select id="tN" onchange="sum()"></select></div>
-       <div id="boxP2" style="display:none;"><label>पाउने व्यक्ति</label><input type="text" id="tN2" placeholder="नाम लेख्नुहोस्"></div>
+       <div id="boxP2" style="display:none;"><label>पाउने व्यक्ति</label><input type="text" id="tN2" placeholder="नाम लेख्नुहोस्" oninput="sum()"></div>
     </div>
 
     <div id="loanUI" style="display:none; margin-top:5px; border:1px solid var(--theme); padding:8px; border-radius:10px;">
@@ -242,6 +242,15 @@
   function sum() {
     let name = document.getElementById('tN').value, cat = document.getElementById('cat').value, ed = document.getElementById('eD').value;
     if(!name) return;
+    
+    // थपिएको लजिक: यदि दाजुभाइ विधा हो भने दिने र पाउने दुवै नाम जोडेर सर्भरमा पठाउने
+    if(cat === 'दाजुभाइ') {
+      let rc = document.getElementById('tN2').value;
+      if(rc) {
+        name += " -> " + rc;
+      }
+    }
+
     google.script.run.withSuccessHandler(r => {
       document.getElementById('oDate').innerText = r.lastDate;
       document.getElementById('oCount').innerText = toN(r.count);
