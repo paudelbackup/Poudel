@@ -21,7 +21,15 @@ function processEntry(obj) {
     if (sheet.getLastRow() === 0) {
       const headers = ["मिति (BS)", "मिति (AD)", "प्रकार", "नाम", "ब्याज दर %", "थप सावाँ/बिल", "किस्ता/भुक्तानी", "तिरेको ब्याज", "कुल बाँकी", "कैफियत", "फोटो"];
       sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f3f3f3").setHorizontalAlignment("center");
+      
+      // हेडर रेन्ज लिने
+      const headerRange = sheet.getRange(1, 1, 1, headers.length);
+      
+      // १. हेडरलाई बोल्ड, ब्याकग्राउन्ड सेट गर्ने र सेन्टर एलाइन गर्ने
+      headerRange.setFontWeight("bold").setBackground("#f3f3f3").setHorizontalAlignment("center");
+      
+      // २. हेडरमा चारैतिर पातलो कालो बोर्डर राख्ने (परिवर्तन गरिएको)
+      headerRange.setBorder(true, true, true, true, true, true, "#000000", SpreadsheetApp.BorderStyle.SOLID);
     }
 
     const photoStatus = (obj.imageBlob && obj.imageBlob.includes(',')) ? saveFile(obj) : "फोटो छैन";
@@ -171,4 +179,7 @@ function formatMySheet(sheet) {
   const lastCol = sheet.getLastColumn();
   sheet.getRange(1, 1, lastRow, lastCol).setHorizontalAlignment("center").setVerticalAlignment("middle").setFontFamily("Mukta");
   sheet.autoResizeColumns(1, lastCol);
+  
+  // ३. पहिलो कोलम (मिति) लाई अझ फराकिलो (Wide) बनाउने ताकि डाटाहरू तेर्सो धर्कोमै अटाइरहून्
+  sheet.setColumnWidth(1, 160); 
 }
