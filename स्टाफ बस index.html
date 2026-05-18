@@ -8,24 +8,56 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Mukta:wght@600;800&display=swap');
-    :root { --bg: #0f172a; --card: #1e293b; --blue: #38bdf8; --green: #4ade80; --red: #fb7185; --orange: #fb923c; --text: #f1f5f9; --border: #334155; }
+    :root { 
+      --bg: #0f172a; 
+      --card: #1e293b; 
+      --blue: #38bdf8; 
+      --green: #4ade80; 
+      --red: #fb7185; 
+      --orange: #fb923c; 
+      --text: #f1f5f9; 
+      --border: #334155; 
+      /* नयाँ रङ्गीचङ्गी आइकन थिम कलरहरू */
+      --ic-bus: #38bdf8;      /* स्काई ब्लू */
+      --ic-driver: #a855f7;   /* पर्पल */
+      --ic-inst: #f43f5e;     /* पिन्क/रेड */
+      --ic-trip: #eab308;     /* पहेलो */
+      --ic-date: #10b981;     /* हरियो */
+    }
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Mukta', sans-serif; }
     body { background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
     
+    /* हेडरका सबै सामाग्रीहरू नछोपिने गरी मिलाइएको */
     .header { 
-      padding: 8px 12px; background: var(--card); border-bottom: 2px solid var(--blue); 
-      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;
+      padding: 8px 10px; background: var(--card); border-bottom: 2px solid var(--blue); 
+      display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 6px; position: sticky; top: 0; z-index: 1000;
     }
-    #bsDisplay { font-size: 14px; font-weight: 800; color: var(--green); flex: 2; text-align: left; }
-    .header-right { display: flex; gap: 5px; flex: 3; justify-content: flex-end; }
-    .head-sel { background: #0f172a; color: white; border: 1px solid var(--blue); border-radius: 5px; padding: 4px; font-size: 11px; font-weight: 800; outline: none; }
+    /* नेपाली मितिको साइज अलिक बढाएर १३ पिक्सेल बनाइएको */
+    #bsDisplay { font-size: 13px; font-weight: 800; color: var(--green); white-space: nowrap; flex: 2.2; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+    .header-right { display: flex; gap: 5px; flex: 3.8; justify-content: flex-end; align-items: center; min-width: 0; }
+    
+    .head-sel { background: #0f172a; color: white; border: 1px solid var(--blue); border-radius: 5px; padding: 2px; font-size: 11px; font-weight: 800; outline: none; height: 30px; flex: 1; min-width: 0; }
+    
+    /* एडी क्यालेन्डर आइकन कन्टेनर र हिडन इनपुट */
+    .date-wrapper { position: relative; display: flex; align-items: center; justify-content: center; background: #0f172a; border: 1px solid var(--red); border-radius: 5px; height: 30px; width: 42px; cursor: pointer; flex: 0 0 42px; }
+    .date-wrapper i { color: var(--red); font-size: 16px; pointer-events: none; }
+    .head-date-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 
     .container { padding: 12px; max-width: 600px; margin: auto; }
     
+    /* रङ्गीचङ्गी आइकन र बोर्डर डिजाइन */
     .setting-bar { display: flex; gap: 5px; margin-bottom: 12px; }
     .set-btn { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 8px 2px; text-align: center; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-    .set-btn i { font-size: 18px; color: var(--blue); display: block; margin-bottom: 2px; }
-    .set-btn span { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+    .set-btn:active { transform: scale(0.95); background: #1e293b; }
+    .set-btn i { font-size: 18px; display: block; margin-bottom: 2px; }
+    
+    /* प्रत्येक बटनलाई छुट्टाछुट्टै चम्किलो कलर र इफेक्ट */
+    .set-btn.sb-bus i { color: var(--ic-bus); text-shadow: 0 0 8px rgba(56,189,248,0.3); }
+    .set-btn.sb-driver i { color: var(--ic-driver); text-shadow: 0 0 8px rgba(168,85,247,0.3); }
+    .set-btn.sb-inst i { color: var(--ic-inst); text-shadow: 0 0 8px rgba(244,63,94,0.3); }
+    .set-btn.sb-trip i { color: var(--ic-trip); text-shadow: 0 0 8px rgba(234,179,8,0.3); }
+    .set-btn.sb-date i { color: var(--ic-date); text-shadow: 0 0 8px rgba(16,185,129,0.3); }
+    .set-btn span { font-size: 10px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; }
 
     .tab-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .tab-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--blue); background: rgba(56,189,248,0.1); color: var(--blue); font-weight: 800; cursor: pointer; text-align: center; }
@@ -45,8 +77,27 @@
     .row { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 6px; margin-bottom: 10px; width: 100%; overflow: hidden; }
     .col { flex: 1; min-width: 0; }
 
-    #photoBtn { width: 45px; height: 45px; background: rgba(56,189,248,0.1); border: 1.5px dashed var(--blue); color: var(--blue); border-radius: 8px; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
-    #photoBtn img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
+    /* नयाँ क्यामेरा आइकन डिजाइन - पर्फेक्ट गोलो सर्कल र सेन्टर एलाइनमेन्ट */
+    .photo-container { display: flex; justify-content: center; align-items: center; width: 100%; height: 40px; }
+    #photoBtn { 
+      width: 42px; 
+      height: 42px; 
+      background: rgba(234, 179, 8, 0.15); 
+      border: 2px dashed var(--ic-trip); 
+      color: var(--ic-trip); 
+      border-radius: 50%; /* १००% गोलो सर्कल */
+      cursor: pointer; 
+      overflow: hidden; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      position: relative;
+      box-shadow: 0 0 8px rgba(234,179,8,0.2);
+      transition: 0.2s;
+    }
+    #photoBtn:active { transform: scale(0.9); }
+    #photoBtn i { font-size: 16px; margin: 0; padding: 0; display: block; }
+    #photoBtn img { width: 100%; height: 100%; object-fit: cover; position: absolute; border-radius: 50%; }
 
     .btn-save { background: linear-gradient(135deg, var(--blue), var(--green)); border: none; padding: 16px; border-radius: 15px; color: #000; font-size: 18px; font-weight: 900; width: 100%; cursor: pointer; }
 
@@ -65,8 +116,15 @@
 
 <div class="header">
   <div id="bsDisplay">लोड हुँदैछ...</div>
+  
   <div class="header-right">
+    <div class="date-wrapper">
+      <i class="fas fa-calendar-alt"></i>
+      <input type="date" id="adPicker" class="head-date-input" onchange="pickADDate(this.value)">
+    </div>
+    
     <select id="tripSelectHeader" class="head-sel"><option value="">ट्रिप</option></select>
+    
     <select id="shiftSelect" class="head-sel">
       <option value="बिहान">बिहान</option>
       <option value="दिउँसो">दिउँसो</option>
@@ -78,11 +136,11 @@
 
 <div class="container">
   <div class="setting-bar">
-    <div class="set-btn" onclick="openMgr('busNumber', 'बस नम्बर सेटिङ')"><i class="fas fa-bus"></i><span>बस</span></div>
-    <div class="set-btn" onclick="openMgr('driverName', 'ड्राइभर सेटिङ')"><i class="fas fa-user-tie"></i><span>ड्राइभर</span></div>
-    <div class="set-btn" onclick="openMgr('instName', 'संस्था सेटिङ')"><i class="fas fa-university"></i><span>संस्था</span></div>
-    <div class="set-btn" onclick="openMgr('tripList', 'ट्रिप सेटिङ')"><i class="fas fa-route"></i><span>ट्रिप</span></div>
-    <div class="set-btn" onclick="openDateModal()"><i class="fas fa-calendar-alt"></i><span>गते +/-</span></div>
+    <div class="set-btn sb-bus" onclick="openMgr('busNumber', 'बस नम्बर सेटिङ')"><i class="fas fa-bus"></i><span>बस</span></div>
+    <div class="set-btn sb-driver" onclick="openMgr('driverName', 'ड्राइभर सेटिङ')"><i class="fas fa-user-tie"></i><span>ड्राइभर</span></div>
+    <div class="set-btn sb-inst" onclick="openMgr('instName', 'संस्था सेटिङ')"><i class="fas fa-university"></i><span>संस्था</span></div>
+    <div class="set-btn sb-trip" onclick="openMgr('tripList', 'ट्रिप सेटिङ')"><i class="fas fa-route"></i><span>ट्रिप</span></div>
+    <div class="set-btn sb-date" onclick="openDateModal()"><i class="fas fa-calendar-alt"></i><span>गते +/-</span></div>
   </div>
 
   <div class="tab-row">
@@ -111,8 +169,21 @@
     </div>
 
     <div class="card" style="border-left-color: var(--green);">
-      <div class="row"><div class="col"><div class="label">लिटर</div><input type="number" id="dLit" oninput="dfc()"></div><div class="col"><div class="label">रेट</div><input type="number" id="dRat" oninput="dfc()"></div><div class="col"><div class="label">डिजेल रकम</div><input type="number" id="dAmt" readonly></div></div>
-      <div class="row" style="align-items: flex-end;"><div class="col" style="flex:3"><div class="label">कैफियत</div><input type="text" id="rem"></div><div class="col"><div class="label">फोटो</div><div id="photoBtn" onclick="document.getElementById('pFile').click()"><i class="fas fa-camera"></i></div><input type="file" id="pFile" accept="image/*" style="display:none" onchange="pv(this)"></div></div>
+      <div class="row">
+        <div class="col"><div class="label">लिटर</div><input type="number" step="any" id="dLit" oninput="dfc('lit')"></div>
+        <div class="col"><div class="label">रेट</div><input type="number" step="any" id="dRat" oninput="dfc('rat')"></div>
+        <div class="col"><div class="label">डिजेल रकम</div><input type="number" step="any" id="dAmt" oninput="dfc('amt')"></div>
+      </div>
+      <div class="row" style="align-items: flex-end;">
+        <div class="col" style="flex:3"><div class="label">कैफियत</div><input type="text" id="rem"></div>
+        <div class="col">
+          <div class="label" style="text-align: center;">फोटो</div>
+          <div class="photo-container">
+            <div id="photoBtn" onclick="document.getElementById('pFile').click()"><i class="fas fa-camera"></i></div>
+          </div>
+          <input type="file" id="pFile" accept="image/*" style="display:none" onchange="pv(this)">
+        </div>
+      </div>
     </div>
     <button type="button" class="btn-save" onclick="saveFormRecord()">डाटा सुरक्षित गर्नुहोस्</button>
   </form>
@@ -124,10 +195,6 @@
     <div class="row">
       <button class="btn-save btn-date-adj" style="flex:1; padding:10px;" onclick="adjustDayOnly(-1)">- १ गते</button>
       <button class="btn-save btn-date-adj" style="flex:1; padding:10px; background:var(--orange);" onclick="adjustDayOnly(1)">+ १ गते</button>
-    </div>
-    <div class="date-pop-card">
-      <div class="label" style="text-align:center">AD क्यालेन्डरबाट छान्नुहोस्</div>
-      <input type="date" id="adPicker" onchange="pickADDate(this.value)">
     </div>
     <button onclick="closeDateModal()" style="width:100%; margin-top:15px; padding:10px; background:var(--red); border:none; color:white; border-radius:10px; font-weight:800;">बन्द</button>
   </div>
@@ -201,9 +268,30 @@ function switchSection(t) {
 }
 
 function pv(i) { if(i.files&&i.files[0]){const r=new FileReader(); r.onload=e=>document.getElementById('photoBtn').innerHTML=`<img src="${e.target.result}">`; r.readAsDataURL(i.files[0]);} }
-function dfc() { 
-  let l=parseFloat(document.getElementById('dLit').value)||0, r=parseFloat(document.getElementById('dRat').value)||0; 
-  document.getElementById('dAmt').value=Math.round(l*r); 
+
+/* डिजेल सेक्सनको कुनै पनि २ वटा कोठा भरिएमा स्वतः तेस्रो हिसाब गर्ने फङ्ग्सन */
+function dfc(changedField) { 
+  let lit = parseFloat(document.getElementById('dLit').value);
+  let rat = parseFloat(document.getElementById('dRat').value);
+  let amt = parseFloat(document.getElementById('dAmt').value);
+  
+  if (changedField === 'lit' || changedField === 'rat') {
+    if (!isNaN(lit) && !isNaN(rat)) {
+      document.getElementById('dAmt').value = Math.round(lit * rat);
+    } else if (!isNaN(lit) && !isNaN(amt) && lit > 0 && changedField === 'lit') {
+      document.getElementById('dRat').value = (amt / lit).toFixed(2);
+    } else if (!isNaN(rat) && !isNaN(amt) && rat > 0 && changedField === 'rat') {
+      document.getElementById('dLit').value = (amt / rat).toFixed(2);
+    }
+  } 
+  else if (changedField === 'amt') {
+    if (!isNaN(amt) && !isNaN(rat) && rat > 0) {
+      document.getElementById('dLit').value = (amt / rat).toFixed(2);
+    } else if (!isNaN(amt) && !isNaN(lit) && lit > 0) {
+      document.getElementById('dRat').value = (amt / lit).toFixed(2);
+    }
+  }
+
   if(globalEntryType === "Reserve") reCalc();
 }
 
@@ -230,10 +318,12 @@ function toEngNum(n) {
 function fetchOldKM() {
   let bus = document.getElementById('busNumber').value;
   if(!bus) return;
-  google.script.run.withSuccessHandler(function(km) {
-    document.getElementById('oKM').innerText = toN(km || 0);
-    upKM();
-  }).getLastKM(bus, window.nepaliMonthStr);
+  if(typeof google !== 'undefined') {
+    google.script.run.withSuccessHandler(function(km) {
+      document.getElementById('oKM').innerText = toN(km || 0);
+      upKM();
+    }).getLastKM(bus, window.nepaliMonthStr);
+  }
 }
 
 function saveFormRecord() {
@@ -282,37 +372,40 @@ function saveFormRecord() {
   }
 }
 
-// सफलता सन्देश पछि ३ सेकेन्ड होल्ड भएर एपको फर्म मात्र रिसेट हुने लजिक
 function sendToServer(payload, photoObj) {
-  google.script.run
-    .withSuccessHandler(function(res) {
-      Swal.close();
-      if(res === "SUCCESS") {
-        Swal.fire({
-          title: 'सफलता',
-          text: 'डाटा सुरक्षित भयो !',
-          icon: 'success',
-          timer: 3000, 
-          showConfirmButton: true
-        }).then(() => {
-          // फर्म मात्र रिसेट (पेज रिफ्रेस हुँदैन)
-          document.getElementById('mainForm').reset();
-          document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
-          document.getElementById('shiftSelect').value = "दुवै";
-          document.getElementById('resSav').innerText = "०";
-          document.getElementById('rKM').innerText = "०";
-          document.getElementById('oKM').innerText = "०";
-          loadServerSettings();
-        });
-      } else {
-        Swal.fire('त्रुटि', res, 'error');
-      }
-    })
-    .withFailureHandler(function(err) {
-      Swal.close();
-      Swal.fire('त्रुटि', err.toString(), 'error');
-    })
-    .process(payload, photoObj);
+  if(typeof google !== 'undefined') {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close();
+        if(res === "SUCCESS") {
+          Swal.fire({
+            title: 'सफलता',
+            text: 'डाटा सुरक्षित भयो !',
+            icon: 'success',
+            timer: 3000, 
+            showConfirmButton: true
+          }).then(() => {
+            document.getElementById('mainForm').reset();
+            document.getElementById('photoBtn').innerHTML = `<i class="fas fa-camera"></i>`;
+            document.getElementById('shiftSelect').value = "दुवै";
+            document.getElementById('resSav').innerText = "०";
+            document.getElementById('rKM').innerText = "०";
+            document.getElementById('oKM').innerText = "०";
+            loadServerSettings();
+          });
+        } else {
+          Swal.fire('त्रुटि', res, 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        Swal.fire('त्रुटि', err.toString(), 'error');
+      })
+      .process(payload, photoObj);
+  } else {
+    Swal.close();
+    Swal.fire('लोकल मोड', 'गुगल स्क्रिप्ट नभेटिएकाले DATA SAVE हुन सकेन।', 'info');
+  }
 }
 
 let currentKey = "";
@@ -337,52 +430,58 @@ function addMgrItem() {
   if(!v) return;
   Swal.fire({ title: 'थपिँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
   
-  google.script.run.withSuccessHandler(function(res) {
-    Swal.close();
-    document.getElementById('mgrInput').value = "";
-    loadServerSettings();
-  }).saveSettingToSheet(currentKey, v);
+  if(typeof google !== 'undefined') {
+    google.script.run.withSuccessHandler(function(res) {
+      Swal.close();
+      document.getElementById('mgrInput').value = "";
+      loadServerSettings();
+    }).saveSettingToSheet(currentKey, v);
+  }
 }
 
 function deleteMgrItem(val) {
   Swal.fire({ title: 'हटाइँदैछ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-  google.script.run.withSuccessHandler(function(res) {
-    Swal.close();
-    loadServerSettings();
-  }).removeSettingFromSheet(currentKey, val);
+  if(typeof google !== 'undefined') {
+    google.script.run.withSuccessHandler(function(res) {
+      Swal.close();
+      loadServerSettings();
+    }).removeSettingFromSheet(currentKey, val);
+  }
 }
 
 function loadServerSettings() {
-  google.script.run.withSuccessHandler(function(settings) {
-    serverSettingsGlobal = settings;
-    
-    const fields = [
-      { id: 'busNumber', list: settings.busNumber, last: settings.lastBus, label: 'छान्नुहोस्' },
-      { id: 'driverName', list: settings.driverName, last: settings.lastDriver, label: 'छान्नुहोस्' },
-      { id: 'instName', list: settings.instName, last: settings.lastInstitution, label: 'छान्नुहोस्' },
-      { id: 'tripSelectHeader', list: settings.tripList, last: settings.lastTrip, label: 'ट्रिप' }
-    ];
-    
-    fields.forEach(f => {
-      let el = document.getElementById(f.id);
-      if(el) {
-        let html = `<option value="">${f.label}</option>`;
-        f.list.forEach(item => {
-          let selected = (f.last && f.last.toString().trim() === item.toString().trim()) ? 'selected' : '';
-          html += `<option value="${item}" ${selected}>${item}</option>`;
-        });
-        el.innerHTML = html;
+  if(typeof google !== 'undefined') {
+    google.script.run.withSuccessHandler(function(settings) {
+      serverSettingsGlobal = settings;
+      
+      const fields = [
+        { id: 'busNumber', list: settings.busNumber, last: settings.lastBus, label: 'छान्नुहोस्' },
+        { id: 'driverName', list: settings.driverName, last: settings.lastDriver, label: 'छान्नुहोस्' },
+        { id: 'instName', list: settings.instName, last: settings.lastInstitution, label: 'छान्नुहोस्' },
+        { id: 'tripSelectHeader', list: settings.tripList, last: settings.lastTrip, label: 'ट्रिप' }
+      ];
+      
+      fields.forEach(f => {
+        let el = document.getElementById(f.id);
+        if(el) {
+          let html = `<option value="">${f.label}</option>`;
+          f.list.forEach(item => {
+            let selected = (f.last && f.last.toString().trim() === item.toString().trim()) ? 'selected' : '';
+            html += `<option value="${item}" ${selected}>${item}</option>`;
+          });
+          el.innerHTML = html;
+        }
+      });
+      
+      if(settings.lastOffset) {
+        dayOffsetOnly = parseInt(settings.lastOffset) || 0;
+        updateBSDate();
       }
-    });
-    
-    if(settings.lastOffset) {
-      dayOffsetOnly = parseInt(settings.lastOffset) || 0;
-      updateBSDate();
-    }
-    
-    if(currentKey) renderMgr();
-    fetchOldKM();
-  }).getSettings();
+      
+      if(currentKey) renderMgr();
+      fetchOldKM();
+    }).getSettings();
+  }
 }
 
 window.onload = () => {
