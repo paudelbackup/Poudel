@@ -2,32 +2,43 @@
 <html>
 <head>
   <base target="_top">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght=700;900&family=Plus+Jakarta+Sans:wght=400;600;800&family=Noto+Serif+Devanagari:wght=600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root { --primary: #0f172a; --accent: #2563eb; --success: #059669; --danger: #dc2626; --gold: #fbbf24; --card-bg: #ffffff; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: #e2e8f0; margin: 0; padding: 10px; display: flex; justify-content: center; }
     .container { width: 100%; max-width: 480px; background: var(--card-bg); padding: 20px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); box-sizing: border-box; }
     
-    .brand-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f1f5f9; }
-    .brand-name { font-family: 'Orbitron', sans-serif; font-size: 15px; letter-spacing: 1px; font-weight: 900; background: linear-gradient(45deg, #1e293b, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
-    .brand-name i { -webkit-text-fill-color: var(--gold); font-size: 20px; }
+    .brand-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f1f5f9; gap: 10px; }
+    .brand-name { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 0.5px; font-weight: 900; background: linear-gradient(45deg, #1e293b, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 6px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-name i { -webkit-text-fill-color: var(--gold); font-size: 18px; }
 
-    .add-party-btn { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #065f46; padding: 10px 14px; border-radius: 15px; cursor: pointer; border: 1.5px solid #059669; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+    .add-party-btn { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #065f46; padding: 10px 14px; border-radius: 15px; cursor: pointer; border: 1.5px solid #059669; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 8px; justify-content: center; white-space: nowrap; }
     .icon-stack { position: relative; width: 22px; height: 20px; display: inline-block; }
     .icon-stack .fa-home { font-size: 18px; position: absolute; left: 0; bottom: 0; color: #059669; }
     .icon-stack .fa-tools { font-size: 11px; position: absolute; right: -2px; top: -2px; color: #f59e0b; }
 
-    .date-card { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-    .date-box { position: relative; display: flex; align-items: center; }
-    .date-box i { position: absolute; left: 12px; color: var(--accent); font-size: 14px; display: flex; align-items: center; justify-content: center; height: 100%; pointer-events: none; }
-    .date-box input { width: 100%; padding: 12px 10px 12px 38px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-weight: 700; box-sizing: border-box; outline: none; font-size: 14px; background: #fff; line-height: 1; }
+    /* मिति कार्ड लेआउट: आइकन हटाएर नेपाली मितिलाई पूरा देखिने स्पेस मिलाइएको */
+    .date-card { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+    .date-box { position: relative; display: flex; align-items: center; width: 100%; }
+    .date-box i.fa-globe { position: absolute; left: 10px; color: #8b5cf6; font-size: 14px; pointer-events: none; }
+    .date-box input { width: 100%; padding: 12px 6px 12px 30px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-weight: 700; box-sizing: border-box; outline: none; font-size: 13px; background: #fff; height: 46px; }
+    
+    /* नेपाली मिति र्‍यापर: आइकन हटाइएको र पूरा १० वटै अक्षर स्पष्ट अट्ने */
+    .nepali-date-wrapper { display: flex; align-items: center; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 0 12px; height: 46px; box-sizing: border-box; width: 100%; overflow: visible; }
+    
+    /* नेपाली मिति इनपुट फन्ट र मिलावट */
+    .nepali-date-wrapper input { border: none; padding: 0; font-weight: 800; font-size: 16px; outline: none; width: 100%; height: 100%; background: transparent; font-family: 'Noto Serif Devanagari', serif; letter-spacing: 0.8px; white-space: nowrap; text-align: center; }
 
-    .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
     .stat-card { background: #fff; padding: 12px 5px; border-radius: 18px; text-align: center; border: 1.5px solid #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .stat-card i { font-size: 16px; margin-bottom: 4px; }
     .stat-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; }
-    .stat-val { font-size: 14px; font-weight: 800; display: block; margin-top: 3px; }
+    .stat-val { font-size: 15px; font-weight: 800; display: block; margin-top: 3px; font-family: 'Noto Serif Devanagari', serif; }
+
+    .ledger-status-box { background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 12px 15px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1.5px solid #334155; }
+    .ledger-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
+    .ledger-val { font-size: 18px; font-weight: 900; font-family: 'Noto Serif Devanagari', serif; }
 
     .mode-tabs { display: flex; background: #f1f5f9; padding: 5px; border-radius: 15px; margin-bottom: 20px; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; color: #64748b; background: transparent; font-size: 14px; text-align: center; display: flex; align-items: center; justify-content: center; }
@@ -40,7 +51,8 @@
     .input-container { position: relative; display: flex; align-items: center; width: 100%; }
     .input-container i.main-icon { position: absolute; left: 12px; color: var(--accent); font-size: 14px; pointer-events: none; display: flex; align-items: center; justify-content: center; height: 100%; top: 0; }
     
-    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px 10px 12px 38px; border: 2px solid #f1f5f9; border-radius: 15px; font-size: 14px; font-weight: 700; outline: none; box-sizing: border-box; background: #fff; height: 46px; align-items: center; line-height: 1; }
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px 10px 12px 38px; border: 2px solid #f1f5f9; border-radius: 15px; font-size: 15px; font-weight: 700; outline: none; box-sizing: border-box; background: #fff; height: 46px; align-items: center; line-height: 1; }
+    .nep-num-input { font-family: 'Noto Serif Devanagari', serif !important; font-size: 16px !important; font-weight: 800 !important; }
 
     .type-switcher { display: flex; gap: 10px; margin-bottom: 15px; }
     .t-option { flex: 1; padding: 12px; border-radius: 15px; border: 2px solid #f1f5f9; text-align: center; font-weight: 800; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
@@ -48,7 +60,7 @@
     .t-option.exp.active { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
 
     .labor-card { background: #f8fafc; padding: 15px; border-radius: 20px; border: 2px dashed #cbd5e1; display: none; margin-bottom: 15px; }
-    .wage-display { grid-column: span 2; background: var(--primary); color: #fff; padding: 12px; border-radius: 15px; text-align: center; margin-top: 5px; font-weight: 800; display: flex; align-items: center; justify-content: center; height: 46px; box-sizing: border-box; font-size: 15px; }
+    .wage-display { grid-column: span 2; background: var(--primary); color: #fff; padding: 12px; border-radius: 15px; text-align: center; margin-top: 5px; font-weight: 800; display: flex; align-items: center; justify-content: center; height: 46px; box-sizing: border-box; font-size: 16px; font-family: 'Noto Serif Devanagari', serif; }
 
     .action-row { display: flex; gap: 12px; margin-top: 20px; }
     .camera-btn { width: 60px; height: 60px; background: #f1f5f9; border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #e2e8f0; color: #64748b; font-size: 20px; }
@@ -65,6 +77,9 @@
     #choiceModal, #modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 3000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
     .m-box { background: white; width: 100%; max-width: 380px; padding: 25px; border-radius: 25px; }
     .choice-item { padding: 18px; background: #f8fafc; margin: 12px 0; border-radius: 18px; cursor: pointer; font-weight: 800; border: 2px solid #f1f5f9; display: flex; align-items: center; gap: 12px; }
+    .adj-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; margin-bottom: 10px; }
+    .adj-btn-m { background: #f1f5f9; border: 2px solid #cbd5e1; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 14px; text-align: center; }
+    .adj-btn-m:hover { background: #cbd5e1; }
   </style>
 </head>
 <body>
@@ -81,19 +96,29 @@
     <div class="brand-name" id="mainTitle"><i class="fas fa-tools"></i> KHADKA CONSTRUCTION</div>
     <div class="add-party-btn" onclick="openChoice()">
       <span class="icon-stack"><i class="fas fa-home"></i><i class="fas fa-tools"></i></span>
-      थप्नुहोस्
+      सेटिङ
     </div>
   </div>
 
   <div class="date-card">
-    <div class="date-box"><i class="fas fa-calendar-alt"></i><input type="text" id="nepDate" placeholder="२०८१/०१/०१" oninput="bsToAd()"></div>
-    <div class="date-box"><i class="fas fa-globe" style="color:#8b5cf6"></i><input type="date" id="engDate" onchange="adToBs()"></div>
+    <div class="nepali-date-wrapper">
+      <input type="text" id="nepDate" placeholder="२०८३/०१/०१" oninput="bsToAd()">
+    </div>
+    <div class="date-box">
+      <i class="fas fa-globe"></i>
+      <input type="date" id="engDate" onchange="adToBs()">
+    </div>
   </div>
 
   <div class="dash-grid">
-    <div class="stat-card"><i class="fas fa-box-open" style="color:var(--danger)"></i><span class="stat-label">सामान</span><span id="vMat" class="stat-val" style="color:var(--danger)">0</span></div>
-    <div class="stat-card"><i class="fas fa-user-clock" style="color:var(--danger)"></i><span class="stat-label">लेबर</span><span id="vLab" class="stat-val" style="color:var(--danger)">0</span></div>
-    <div class="stat-card"><i class="fas fa-wallet" style="color:var(--success)"></i><span class="stat-label">बचत</span><span id="vSav" class="stat-val" style="color:var(--success)">0</span></div>
+    <div class="stat-card"><i class="fas fa-box-open" style="color:var(--danger)"></i><span class="stat-label">सामान</span><span id="vMat" class="stat-val" style="color:var(--danger)">०</span></div>
+    <div class="stat-card"><i class="fas fa-user-clock" style="color:var(--danger)"></i><span class="stat-label">लेबर</span><span id="vLab" class="stat-val" style="color:var(--danger)">०</span></div>
+    <div class="stat-card"><i class="fas fa-wallet" style="color:var(--success)"></i><span class="stat-label">बचत</span><span id="vSav" class="stat-val" style="color:var(--success)">०</span></div>
+  </div>
+
+  <div class="ledger-status-box">
+    <div class="ledger-title" id="lblLedgerName">पार्टी/लेबर हिसाब</div>
+    <div class="ledger-val" id="lblLedgerAmt">रू. ०</div>
   </div>
 
   <div class="mode-tabs">
@@ -113,14 +138,14 @@
       <label>विवरण (सामान)</label>
       <div class="input-container">
         <i class="fas fa-tag main-icon" style="color:#8b5cf6"></i>
-        <select id="item"></select>
+        <select id="item" onchange="loadStats()"></select>
       </div>
     </div>
     <div class="select-wrapper" id="payCol" style="display:none;">
       <label>आजको भुक्तानी</label>
       <div class="input-container">
         <i class="fas fa-hand-holding-usd main-icon" style="color:#10b981"></i>
-        <input type="number" id="lAmt" value="0">
+        <input type="text" id="lAmt" class="nep-num-input" value="०" oninput="this.value = toNepNum(toEngNum(this.value))">
       </div>
     </div>
   </div>
@@ -135,14 +160,14 @@
         <label>परिमाण</label>
         <div class="input-container">
           <i class="fas fa-layer-group main-icon" style="color:#10b981"></i>
-          <input type="number" id="qty" value="0">
+          <input type="text" id="qty" class="nep-num-input" value="०" oninput="this.value = toNepNum(toEngNum(this.value))">
         </div>
       </div>
       <div class="select-wrapper">
         <label>कुल रकम</label>
         <div class="input-container">
           <i class="fas fa-coins main-icon" style="color:#f97316"></i>
-          <input type="number" id="amt" value="0">
+          <input type="text" id="amt" class="nep-num-input" value="०" oninput="this.value = toNepNum(toEngNum(this.value))">
         </div>
       </div>
     </div>
@@ -154,7 +179,7 @@
         <label>मिस्त्रीको नाम</label>
         <div class="input-container">
           <i class="fas fa-user main-icon" style="color:#2563eb"></i>
-          <input type="text" id="mName" placeholder="मिस्त्रीको नाम लेख्नुहोस्">
+          <input type="text" id="mName" placeholder="मिस्त्रीको नाम" oninput="loadStats()">
         </div>
       </div>
     </div>
@@ -163,14 +188,14 @@
         <label>मिस्त्री संख्या</label>
         <div class="input-container">
           <i class="fas fa-user-tie main-icon"></i>
-          <input type="number" id="mQ" value="0" oninput="calc()">
+          <input type="text" id="mQ" class="nep-num-input" value="०" oninput="this.value = toNepNum(toEngNum(this.value)); calc();">
         </div>
       </div>
       <div class="select-wrapper">
         <label>दर</label>
         <div class="input-container">
           <i class="fas fa-money-bill-wave main-icon"></i>
-          <input type="number" id="mR" value="1200" oninput="calc()">
+          <input type="text" id="mR" class="nep-num-input" value="१२००" oninput="this.value = toNepNum(toEngNum(this.value)); calc();">
         </div>
       </div>
     </div>
@@ -182,7 +207,7 @@
         <label>लेबरको नाम</label>
         <div class="input-container">
           <i class="fas fa-user main-icon" style="color:#059669"></i>
-          <input type="text" id="lName" placeholder="लेबरको नाम लेख्नुहोस्">
+          <input type="text" id="lName" placeholder="लेबरको नाम" oninput="loadStats()">
         </div>
       </div>
     </div>
@@ -191,25 +216,25 @@
         <label>लेबर संख्या</label>
         <div class="input-container">
           <i class="fas fa-users main-icon"></i>
-          <input type="number" id="lQ" value="0" oninput="calc()">
+          <input type="text" id="lQ" class="nep-num-input" value="०" oninput="this.value = toNepNum(toEngNum(this.value)); calc();">
         </div>
       </div>
       <div class="select-wrapper">
         <label>दर</label>
         <div class="input-container">
           <i class="fas fa-money-bill-wave main-icon"></i>
-          <input type="number" id="lR" value="800" oninput="calc()">
+          <input type="text" id="lR" class="nep-num-input" value="८००" oninput="this.value = toNepNum(toEngNum(this.value)); calc();">
         </div>
       </div>
-      <div class="wage-display">कुल ज्याला: रू. &nbsp;<span id="tW">0</span></div>
+      <div class="wage-display">कुल ज्याला: रू. &nbsp;<span id="tW">०</span></div>
     </div>
   </div>
 
-  <div class="select-wrapper">
-    <label>कैफियत (टिप्पणी)</label>
+  <div class="select-wrapper" style="margin-bottom:15px;">
+    <label>कैफियत</label>
     <div class="input-container">
-      <i class="fas fa-edit main-icon" style="color:#10b981"></i>
-      <input type="text" id="rem" placeholder="...">
+      <i class="fas fa-edit main-icon" style="color:#64748b"></i>
+      <input type="text" id="rem" placeholder="विवरण वा कैफियत लेख्नुहोस्...">
     </div>
   </div>
 
@@ -222,10 +247,20 @@
 
 <div id="choiceModal" onclick="this.style.display='none'">
   <div class="m-box" onclick="event.stopPropagation()">
-    <h3 style="text-align:center">सेटिङ</h3>
+    <h3 style="text-align:center; margin-bottom:15px;">सेटिङ मेनु</h3>
+    
+    <label style="padding-left:0; color:var(--accent)">नेपाली गते एड्जस्ट गर्नुहोस् (+१/-१):</label>
+    <div class="adj-row">
+      <div class="adj-btn-m" onclick="adjustDate(-1)"><i class="fas fa-minus"></i> १ गते घटाउने</div>
+      <div class="adj-btn-m" onclick="adjustDate(1)"><i class="fas fa-plus"></i> १ गते बढाउने</div>
+    </div>
+    
+    <hr style="border:0; border-top:1px solid #e2e8f0; margin:15px 0;">
+    
     <div class="choice-item" onclick="openSet('contract')"><i class="fas fa-building" style="color:var(--accent)"></i> आयोजना थप्नुहोस्</div>
     <div class="choice-item" onclick="openSet('item')"><i class="fas fa-box" style="color:var(--gold)"></i> सामान थप्नुहोस्</div>
     <div class="choice-item" onclick="openSet('company')"><i class="fas fa-id-card" style="color:var(--danger)"></i> कम्पनीको नाम फेर्नुहोस्</div>
+    <div class="choice-item" onclick="openSet('title')"><i class="fas fa-heading" style="color:#8b5cf6"></i> शीर्षक फेर्नुहोस् (Title)</div>
   </div>
 </div>
 
@@ -242,8 +277,33 @@
 
 <script>
   let isLab = false, curType = 'आम्दानी', settings = {}, base64Img = "";
-  const nepaliMonths = [[2081,31,32,31,32,31,30,30,30,29,30,29,31],[2082,31,31,32,31,31,31,30,29,30,29,30,30],[2083,31,31,32,31,31,31,30,29,30,29,30,30]];
+  const nepaliMonths = [[2081,31,32,31,32,31,30,30,30,29,30,29,31],[2082,31,31,32,31,31,31,30,29,30,29,30,30],[2083,31,31,32,31,31,31,30,29,30,29,30,30],[2084,31,31,32,31,31,30,30,30,29,30,29,31],[2085,31,32,31,32,31,30,30,30,29,30,29,31]];
   const baseDateEng = new Date("2024-04-13");
+
+  const nepNums = ['०','१','२','३','४','५','६','७','८','९'];
+  const engNums = ['0','1','2','3','4','5','6','7','8','9'];
+
+  function toNepNum(num) {
+    if(num === undefined || num === null) return '०';
+    return num.toString().split('').map(ch => {
+      let idx = engNums.indexOf(ch);
+      return idx > -1 ? nepNums[idx] : ch;
+    }).join('');
+  }
+
+  function toEngNum(num) {
+    if(!num) return '0';
+    return num.toString().split('').map(ch => {
+      let idx = nepNums.indexOf(ch);
+      return idx > -1 ? engNums[idx] : ch;
+    }).join('');
+  }
+
+  function formatNepLocale(val) {
+    let engStr = toEngNum(val).replace(/,/g, '');
+    if (isNaN(engStr) || engStr === '') return toNepNum(val);
+    return toNepNum(Number(engStr).toLocaleString('en-IN'));
+  }
 
   function adToBs() {
     const engInput = document.getElementById('engDate').value;
@@ -258,26 +318,61 @@
       if (f) break;
     }
     if(f) {
-      document.getElementById('nepDate').value = cy + '/' + String(cm).padStart(2,'0') + '/' + String(cd).padStart(2,'0');
+      let nepDateStr = cy + '/' + String(cm).padStart(2,'0') + '/' + String(cd).padStart(2,'0');
+      document.getElementById('nepDate').value = toNepNum(nepDateStr);
     }
     loadStats();
   }
 
   function bsToAd() {
-    const bsVal = document.getElementById('nepDate').value;
+    let bsVal = toEngNum(document.getElementById('nepDate').value);
     if (bsVal.length < 10) return;
     const p = bsVal.split('/');
     let y = parseInt(p[0]), m = parseInt(p[1]), d = parseInt(p[2]), totalDays = 0;
+    
+    let yearMatch = false;
     for (let i=0; i<nepaliMonths.length; i++) {
       if (nepaliMonths[i][0] === y) {
+        if(m < 1 || m > 12 || d < 1 || d > nepaliMonths[i][m]) return;
         for (let j=1; j<m; j++) totalDays += nepaliMonths[i][j];
-        totalDays += (d - 1); break;
+        totalDays += (d - 1); yearMatch = true; break;
       }
       for (let j=1; j<=12; j++) totalDays += nepaliMonths[i][j];
     }
+    if(!yearMatch) return;
     let res = new Date(baseDateEng); res.setDate(res.getDate() + totalDays);
     document.getElementById('engDate').value = res.toISOString().split('T')[0];
     loadStats();
+  }
+
+  function adjustDate(amount) {
+    let bsVal = toEngNum(document.getElementById('nepDate').value);
+    if (bsVal.length < 10) return;
+    const p = bsVal.split('/');
+    let y = parseInt(p[0]), m = parseInt(p[1]), d = parseInt(p[2]);
+    
+    let monthMax = 30;
+    for (let i=0; i<nepaliMonths.length; i++) {
+      if (nepaliMonths[i][0] === y) { monthMax = nepaliMonths[i][m]; break; }
+    }
+    
+    d += amount;
+    if (d > monthMax) {
+      d = 1; m += 1;
+      if (m > 12) { m = 1; y += 1; }
+    } else if (d < 1) {
+      m -= 1;
+      if (m < 1) { m = 12; y -= 1; }
+      let prevMax = 30;
+      for (let i=0; i<nepaliMonths.length; i++) {
+        if (nepaliMonths[i][0] === y) { prevMax = nepaliMonths[i][m]; break; }
+      }
+      d = prevMax;
+    }
+    
+    let nepDateStr = y + '/' + String(m).padStart(2,'0') + '/' + String(d).padStart(2,'0');
+    document.getElementById('nepDate').value = toNepNum(nepDateStr);
+    bsToAd();
   }
 
   window.onload = () => { 
@@ -289,10 +384,11 @@
   function renderDrop() { 
     document.getElementById('contract').innerHTML = settings.contracts.map(c => '<option>'+c+'</option>').join(''); 
     document.getElementById('item').innerHTML = settings.items.map(i => '<option>'+i+'</option>').join(''); 
-    // ब्रान्ड हेडरको नाम अपडेट गर्ने
-    if(settings.companyName) {
-      document.getElementById('mainTitle').innerHTML = '<i class="fas fa-tools"></i> ' + settings.companyName;
-    }
+    
+    // टाइटल वा कम्पनीको नाम लोड गर्ने व्यवस्था
+    let displayTitle = settings.mainTitle || settings.companyName || "KHADKA CONSTRUCTION";
+    document.getElementById('mainTitle').innerHTML = '<i class="fas fa-tools"></i> ' + displayTitle;
+    
     setType(curType);
   }
 
@@ -305,12 +401,15 @@
     if(t === 'contract') title = 'आयोजना थप्नुहोस्';
     else if(t === 'item') title = 'सामान थप्नुहोस्';
     else if(t === 'company') title = 'कम्पनीको नाम फेर्नुहोस्';
+    else if(t === 'title') title = 'शीर्षक फेर्नुहोस् (Main Title)';
     
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modal').style.display='flex'; 
     
     if (t === 'company') {
       document.getElementById('mArea').value = settings.companyName || "KHADKA CONSTRUCTION";
+    } else if (t === 'title') {
+      document.getElementById('mArea').value = settings.mainTitle || "KHADKA CONSTRUCTION";
     } else {
       document.getElementById('mArea').value = settings[t+'s'].join(', '); 
     }
@@ -319,7 +418,7 @@
   function saveSet() { 
     document.getElementById('loader').style.display = 'flex'; 
     let list = [];
-    if(window.curSet === 'company') {
+    if(window.curSet === 'company' || window.curSet === 'title') {
       list = [document.getElementById('mArea').value.trim()];
     } else {
       list = document.getElementById('mArea').value.split(',').map(s=>s.trim()).filter(s=>s!==""); 
@@ -343,6 +442,7 @@
     document.getElementById('itemCol').style.display = l ? 'none' : (curType === 'खर्च' ? 'block' : 'none');
     document.getElementById('payCol').style.display = l ? 'block' : 'none';
     if(l) setType('खर्च');
+    loadStats();
   }
 
   function setType(t) { 
@@ -352,11 +452,16 @@
     if(!isLab) {
       document.getElementById('itemCol').style.display = (t === 'खर्च') ? 'block' : 'none';
     }
+    loadStats();
   }
 
   function calc() { 
-    const t = (Number(document.getElementById('mQ').value)*Number(document.getElementById('mR').value)) + (Number(document.getElementById('lQ').value)*Number(document.getElementById('lR').value)); 
-    document.getElementById('tW').innerText = t.toLocaleString(); 
+    const mQ = Number(toEngNum(document.getElementById('mQ').value)) || 0;
+    const mR = Number(toEngNum(document.getElementById('mR').value)) || 0;
+    const lQ = Number(toEngNum(document.getElementById('lQ').value)) || 0;
+    const lR = Number(toEngNum(document.getElementById('lR').value)) || 0;
+    const t = (mQ * mR) + (lQ * lR); 
+    document.getElementById('tW').innerText = formatNepLocale(t); 
   }
 
   function handleFile(input) {
@@ -367,13 +472,33 @@
   }
 
   function loadStats() {
-    const c = document.getElementById('contract').value; const d = document.getElementById('engDate').value;
-    if(!c || !d) return;
+    const c = document.getElementById('contract').value;
+    if(!c) return;
+
+    let targetName = "";
+    if (isLab) {
+      targetName = document.getElementById('mName').value || document.getElementById('lName').value || "";
+      document.getElementById('lblLedgerName').innerText = targetName ? targetName + " को हिसाब" : "लेबर हिसाब";
+    } else {
+      targetName = document.getElementById('item').value || "";
+      document.getElementById('lblLedgerName').innerText = targetName ? targetName + " को लेजर" : "पार्टी/सामान हिसाब";
+    }
+
     google.script.run.withSuccessHandler(r => {
-      document.getElementById('vMat').innerText = r.matExp.toLocaleString(); 
-      document.getElementById('vLab').innerText = r.labExp.toLocaleString(); 
-      document.getElementById('vSav').innerText = r.savings.toLocaleString();
-    }).getContractSummary(c, d);
+      document.getElementById('vMat').innerText = formatNepLocale(r.matExp); 
+      document.getElementById('vLab').innerText = formatNepLocale(r.labExp); 
+      document.getElementById('vSav').innerText = formatNepLocale(r.savings);
+      
+      const ledElm = document.getElementById('lblLedgerAmt');
+      ledElm.innerText = "रू. " + formatNepLocale(r.personBalance);
+      if(r.personBalance < 0) {
+        ledElm.style.color = "#f87171"; 
+      } else if (r.personBalance > 0) {
+        ledElm.style.color = "#34d399"; 
+      } else {
+        ledElm.style.color = "#ffffff";
+      }
+    }).getContractSummary(c, targetName, isLab);
   }
 
   function showSuccess() {
@@ -383,14 +508,17 @@
   }
 
   function saveData() {
+    const nepDateVal = toEngNum(document.getElementById('nepDate').value);
+    if(nepDateVal.length < 10) { alert("कृपया पुरा नेपाली मिति लेख्नुहोस् !"); return; }
+
     document.getElementById('loader').style.display = 'flex';
     const d = { 
       isLabor: isLab, englishDate: document.getElementById('engDate').value, 
       nepaliDate: document.getElementById('nepDate').value, contract: document.getElementById('contract').value, 
       type: isLab ? 'खर्च' : curType, remarks: document.getElementById('rem').value, 
-      amt: Number(isLab ? document.getElementById('lAmt').value : document.getElementById('amt').value), 
-      item: isLab ? "लेबर भुक्तानी" : document.getElementById('item').value, 
-      qty: isLab ? 1 : document.getElementById('qty').value, 
+      amt: Number(toEngNum(isLab ? document.getElementById('lAmt').value : document.getElementById('amt').value)), 
+      item: isLab ? "लेबर भुक्तानी" : (curType === 'आम्दानी' ? "आम्दानी संकलन" : document.getElementById('item').value), 
+      qty: isLab ? "१" : document.getElementById('qty').value, 
       mistryName: document.getElementById('mName').value, 
       mistryQty: document.getElementById('mQ').value, mistryRate: document.getElementById('mR').value, 
       laborName: document.getElementById('lName').value,   
@@ -408,11 +536,11 @@
   }
 
   function resetForm() { 
-    document.getElementById('amt').value = 0; document.getElementById('lAmt').value = 0; 
-    document.getElementById('qty').value = 0; document.getElementById('mQ').value = 0; 
-    document.getElementById('lQ').value = 0; document.getElementById('rem').value = ""; 
+    document.getElementById('amt').value = '०'; document.getElementById('lAmt').value = '०'; 
+    document.getElementById('qty').value = '०'; document.getElementById('mQ').value = '०'; 
+    document.getElementById('lQ').value = '०'; document.getElementById('rem').value = "";
     document.getElementById('mName').value = ""; document.getElementById('lName').value = ""; 
-    document.getElementById('tW').innerText = 0; document.getElementById('fInp').value = ""; 
+    document.getElementById('tW').innerText = '०'; document.getElementById('fInp').value = ""; 
     document.getElementById('camBtn').style.background = '#f1f5f9'; base64Img = ""; 
   }
 </script>
