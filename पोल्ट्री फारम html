@@ -1,0 +1,518 @@
+
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Fullscreen Lock + No Zoom + Fit to Screen -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>पोल्ट्री नाफा-नोक्सान फारम</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* CSS Variables */
+    :root { 
+        --primary: #007bff; 
+        --bg: #f5f8ff; 
+        --card: #fff; 
+        --text: #333; 
+        --border: #e0e0e0; 
+        --radius: 14px; 
+        --highlight-read-only: #e3f2fd; 
+        --highlight-input: #fffbe6; 
+    }
+
+    /* FULLSCREEN RESET */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* No scroll on body */
+        font-family: 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+    }
+
+    /* App Container - Full Viewport */
+    #app {
+        width: 100vw;
+        height: 100vh;
+        max-width: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .page-title { 
+        text-align: center; 
+        font-size: 24px; 
+        font-weight: 700; 
+        color: var(--primary); 
+        padding: 16px 20px 8px; 
+        flex-shrink: 0;
+    }
+
+    .header { 
+        background: var(--card); 
+        padding: 12px 16px; 
+        display: flex; 
+        gap: 12px; 
+        border-bottom: 1px solid var(--border); 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        position: sticky; 
+        top: 0; 
+        z-index: 10; 
+        flex-shrink: 0;
+    }
+    
+    .select-box { 
+        flex: 1; 
+        padding: 12px 14px; 
+        border: 1.5px solid var(--border); 
+        border-radius: 10px; 
+        font-size: 15px; 
+        background: #fafafa; 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        color: #444; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+    }
+    .select-box i { color: var(--primary); font-size: 18px; }
+    
+    .date-picker { position: relative; }
+    .date-picker input[type="date"] { 
+        opacity: 0; 
+        position: absolute; 
+        width: 100%; 
+        height: 100%; 
+        cursor: pointer; 
+    }
+    .date-display { 
+        padding: 0; 
+        background: transparent; 
+        border: none; 
+        font-size: 15px; 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: 500;
+    }
+
+    /* Scrollable Form Body */
+    .form-body { 
+        flex: 1; 
+        overflow-y: auto; 
+        overflow-x: hidden;
+        padding: 16px; 
+        padding-bottom: 120px; /* Extra bottom padding for button */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Strict 2-Column Grid Layout (Like Bus Form) */
+    .input-group { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 14px; 
+        margin-bottom: 16px; 
+    } 
+    .input-wrapper { position: relative; }
+    .input-field { 
+        width: 100%; 
+        padding: 16px 16px 16px 48px; 
+        border: 1.5px solid var(--border); 
+        border-radius: var(--radius); 
+        font-size: 15.5px; 
+        background: #fafafa; 
+        transition: all 0.25s; 
+    }
+    .input-field:focus { 
+        outline: none; 
+        border-color: var(--primary); 
+        background: white; 
+        box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.18); 
+    }
+    .input-icon { 
+        position: absolute; 
+        left: 14px; 
+        top: 50%; 
+        transform: translateY(-50%); 
+        color: var(--primary); 
+        font-size: 19px; 
+        pointer-events: none; 
+    }
+    .single-input { 
+        grid-column: 1 / -1; /* Full row for single inputs */
+    }
+
+/* Specific Styles */
+    .read-only .input-field { background: var(--highlight-read-only); color: #004d99; font-weight: 700; border-color: #bbdefb; } 
+    .highlighted .input-field { background: var(--highlight-input); font-weight: 500; border-color: #ffd700; }
+    .highlighted.output .input-field { background: #e6ffec; color: #008000; font-weight: 700;}
+
+    /* Profit/Loss Colors */
+    .profit .input-field { background: #e8f9e6; color: #007000; font-weight: 700; }
+    .loss .input-field { background: #fee8e9; color: #dc3545; font-weight: 700; }
+    .money-icon { color: #28a745; }
+    .expense-icon { color: #dc3545; }
+    
+    /* Submit Button (similar to your bus form) */
+    .submit-btn { 
+        width: calc(100% - 32px);
+        margin: 20px 16px 16px; 
+        padding: 18px; 
+        background: linear-gradient(135deg, var(--primary), #0056b3); 
+        color: white; 
+        border: none; 
+        border-radius: var(--radius); 
+        font-size: 17px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.3s; 
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3); 
+        position: sticky;
+        bottom: 16px;
+        z-index: 5;
+    }
+    .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    
+    /* Loading & Success UI */
+    .loading, .success-check { 
+      display: none; 
+      position: fixed; 
+      top: 0; left: 0; right: 0; bottom: 0; 
+      align-items: center; 
+      justify-content: center; 
+      flex-direction: column; 
+      z-index: 1500; 
+    }
+    .loading { background: rgba(255, 255, 255, 0.95); color: var(--primary); font-weight: 600; gap: 20px; }
+    .loader { width: 50px; height: 50px; border: 6px solid #f3f3f3; border-top: 6px solid var(--primary); border-radius: 50%; animation: spin 1.2s linear infinite; }
+    .success-check { background: rgba(0,0,0,0.9); z-index: 2000; }
+    .success-check-content { background: white; padding: 60px 80px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); text-align: center; color: var(--text); }
+    .success-check i { font-size: 120px; color: #28a745; animation: bounce 0.6s; margin-bottom: 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+
+    /* Prevent Horizontal Scroll Anywhere */
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+    *::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <div class="page-title">पोल्ट्री नाफा-नोक्सान फारम</div>
+
+    <div class="header">
+      <div class="select-box date-picker">
+        <i class="fas fa-calendar-alt"></i>
+        <div class="date-display" id="dateDisplay">मिति चयन गर्नुहोस्</div>
+        <input type="date" id="dateInput" />
+      </div>
+    </div>
+
+    <div class="form-body">
+      
+      <div class="input-group">
+        <div class="input-wrapper read-only">
+          <i class="fas fa-box-open input-icon"></i>
+          <input type="text" class="input-field" placeholder="सुरुवाती स्टक (अघिल्लो दिनको बाँकी)" id="currentStock" readonly>
+        </div>
+        <div class="input-wrapper highlighted">
+          <i class="fas fa-weight-hanging input-icon"></i>
+          <input type="number" class="input-field" placeholder="दाना मात्रा (Kg)" min="0" step="0.1" id="feedQty">
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <div class="input-wrapper">
+          <i class="fas fa-hand-holding-usd input-icon"></i>
+          <input type="number" class="input-field" placeholder="दानाको दर (प्रति Kg)" min="0" step="1" id="feedRate">
+        </div>
+        <div class="input-wrapper highlighted">
+          <i class="fas fa-skull-crossbones input-icon expense-icon"></i>
+
+<input type="number" class="input-field" placeholder="मरेको संख्या" min="0" step="1" id="deadBirds">
+        </div>
+      </div>
+      
+      <div class="input-group">
+          <div class="input-wrapper highlighted">
+            <i class="fas fa-truck-loading input-icon"></i>
+            <input type="number" class="input-field" placeholder="बेचेको संख्या" min="0" step="1" id="soldCount">
+          </div>
+          <div class="input-wrapper highlighted">
+            <i class="fas fa-weight input-icon"></i>
+            <input type="number" class="input-field" placeholder="बेचेको (Kg)" min="0" step="0.1" id="soldKg">
+          </div>
+      </div>
+      
+      <div class="input-group">
+          <div class="input-wrapper highlighted">
+            <i class="fas fa-tags input-icon"></i>
+            <input type="number" class="input-field" placeholder="मासु को दर (प्रति Kg)" min="0" step="1" id="rate">
+          </div>
+           <div class="input-wrapper highlighted output">
+              <i class="fas fa-money-bill-wave input-icon money-icon"></i>
+              <input type="text" class="input-field" id="totalRevenue" placeholder="कुल आम्दानी (रु.)" readonly>
+          </div>
+      </div>
+      
+      <div class="input-group">
+        <div class="input-wrapper">
+          <i class="fas fa-user-friends input-icon"></i>
+          <input type="text" class="input-field" placeholder="कामदार विवरण" id="workers">
+        </div>
+        <div class="input-wrapper">
+          <i class="fas fa-medkit input-icon"></i>
+          <input type="text" class="input-field" placeholder="औषधि विवरण" id="medicine">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-wrapper">
+          <i class="fas fa-receipt input-icon expense-icon"></i>
+          <input type="number" class="input-field" placeholder="अन्य खर्च (रु.)" min="0" step="1" id="otherExpense">
+        </div>
+        <div class="input-wrapper highlighted output">
+          <i class="fas fa-calculator input-icon expense-icon"></i>
+          <input type="text" class="input-field" id="totalExpense" placeholder="कुल खर्च (रु.)" readonly>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-wrapper highlighted output">
+          <i class="fas fa-check-circle input-icon"></i>
+          <input type="text" class="input-field" id="remainingBirds" placeholder="बाँकी कुखुरा (अन्तिम स्टक)" readonly>
+        </div>
+        <div class="input-wrapper highlighted output" id="profitLossWrapper">
+          <i class="fas fa-chart-line input-icon money-icon"></i>
+          <input type="text" class="input-field" id="netProfitLoss" placeholder="कुल नाफा/नोक्सान (रु.)" readonly>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <div class="input-wrapper single-input">
+          <i class="fas fa-sticky-note input-icon"></i>
+          <input type="text" class="input-field" placeholder="थप विवरण/नोट्स" id="details">
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn">रेकर्ड सुरक्षित गर्नुहोस्</button>
+    </div>
+  </div>
+  
+  <div class="loading" id="loading">
+    <div class="loader"></div>
+    <div>स्टक तानिँदै/डाटा प्रशोधन हुँदैछ...</div>
+  </div>
+
+  <div class="success-check" id="successCheck">
+    <div class="success-check-content">
+      <i class="fas fa-check-circle"></i>
+      <div style="font-size:24px; font-weight:700; margin-top: 10px;">सफल भयो!</div>
+      <div style="font-size:16px; font-weight:400; color:#666; margin-top:5px;">फारम सफलतापूर्वक सुरक्षित गरियो।</div>
+    </div>
+  </div>
+
+  <script>
+    // Javascript Logic
+    const dateInput = document.getElementById('dateInput');
+    const dateDisplay = document.getElementById('dateDisplay');
+    const submitBtn = document.getElementById('submitBtn');
+
+const loading = document.getElementById('loading');
+    const successCheck = document.getElementById('successCheck');
+    const currentStockInput = document.getElementById('currentStock'); 
+    const feedQtyInput = document.getElementById('feedQty');
+    const feedRateInput = document.getElementById('feedRate'); 
+    const deadBirdsInput = document.getElementById('deadBirds');
+    const soldCountInput = document.getElementById('soldCount');
+    const rateInput = document.getElementById('rate'); 
+    const soldKgInput = document.getElementById('soldKg'); 
+    const otherExpenseInput = document.getElementById('otherExpense'); 
+    const remainingBirdsOutput = document.getElementById('remainingBirds');
+    const totalRevenueOutput = document.getElementById('totalRevenue'); 
+    const totalExpenseOutput = document.getElementById('totalExpense'); 
+    const netProfitLossOutput = document.getElementById('netProfitLoss'); 
+    const profitLossWrapper = document.getElementById('profitLossWrapper');
+
+    function formatDate(dateString) {
+      if (!dateString) return 'मिति चयन गर्नुहोस्';
+      const d = new Date(dateString);
+      const day = String(d.getDate()).padStart(2,'0');
+      const month = String(d.getMonth()+1).padStart(2,'0');
+      const year = d.getFullYear();
+      return ${day}/${month}/${year};
+    }
+
+    function calculateTotals() {
+      const stock = parseInt(currentStockInput.value) || 0; 
+      const dead = parseInt(deadBirdsInput.value) || 0;
+      const sold = parseInt(soldCountInput.value) || 0;
+      const feedQty = parseFloat(feedQtyInput.value) || 0;
+      const feedRate = parseFloat(feedRateInput.value) || 0;
+      const otherExpense = parseFloat(otherExpenseInput.value) || 0;
+      const rate = parseFloat(rateInput.value) || 0;
+      const soldKg = parseFloat(soldKgInput.value) || 0.0;
+
+      const remaining = stock - dead - sold;
+      remainingBirdsOutput.value = remaining >= 0 ? remaining : 'त्रुटि (नकारात्मक)';
+      
+      const revenue = rate * soldKg;
+      totalRevenueOutput.value = revenue.toFixed(2);
+
+      const feedCost = feedQty * feedRate;
+      const expense = feedCost + otherExpense;
+      totalExpenseOutput.value = expense.toFixed(2);
+      
+      const netProfitLoss = revenue - expense;
+      netProfitLossOutput.value = netProfitLoss.toFixed(2);
+      
+      profitLossWrapper.classList.remove('profit', 'loss');
+      const icon = profitLossWrapper.querySelector('i');
+
+      if (netProfitLoss > 0) {
+          profitLossWrapper.classList.add('profit');
+          icon.classList.add('money-icon');
+          icon.classList.remove('expense-icon');
+      } else if (netProfitLoss < 0) {
+          profitLossWrapper.classList.add('loss');
+          icon.classList.add('expense-icon');
+          icon.classList.remove('money-icon');
+      }
+    }
+    
+    function getInitialStock() {
+        loading.style.display = 'flex';
+        google.script.run
+            .withSuccessHandler(stockValue => {
+                loading.style.display = 'none';
+                currentStockInput.value = stockValue; 
+                calculateTotals(); 
+            })
+            .withFailureHandler(err => {
+                loading.style.display = 'none';
+                alert('स्टक तान्न सकेन। त्रुटि: ' + (err.message || 'अज्ञात।'));
+                currentStockInput.value = '0';
+                calculateTotals();
+            })
+            .getPreviousDayStock(); 
+    }
+
+    document.querySelector('.date-picker').addEventListener('click', () => {
+      try { dateInput.showPicker(); } catch (e) { }
+    });
+
+    dateInput.addEventListener('change', () => {
+      dateDisplay.textContent = formatDate(dateInput.value);
+    });
+    
+    [feedQtyInput, feedRateInput, deadBirdsInput, soldCountInput, rateInput, soldKgInput, otherExpenseInput].forEach(input => {
+        input.addEventListener('input', calculateTotals);
+    });
+
+submitBtn.addEventListener('click', () => {
+      if (!dateInput.value) { alert('मिति अनिवार्य छ।'); return; }
+      
+      if (!currentStockInput.value || parseInt(currentStockInput.value) === 0) {
+           const initialChicks = prompt("गोठमा पहिलो पटक चल्ला हाल्दै हुनुहुन्छ?\nकुल चल्लाको संख्या प्रविष्ट गर्नुहोस्:", "");
+           if (initialChicks && !isNaN(parseInt(initialChicks)) && parseInt(initialChicks) > 0) {
+               currentStockInput.value = initialChicks;
+               calculateTotals();
+           } else if (!initialChicks || parseInt(initialChicks) === 0) {
+               alert('नयाँ ब्याचको चल्लाको संख्या अनिवार्य छ।');
+               return;
+           }
+      }
+      
+      calculateTotals();
+
+      if (remainingBirdsOutput.value.includes('त्रुटि')) {
+           alert('बाँकी कुखुराको संख्या नकारात्मक हुन सक्दैन। कृपया बेचेको/मरेको संख्या जाँच गर्नुहोस्।');
+           return;
+      }
+      
+      submitBtn.disabled = true;
+      loading.style.display = 'flex'; 
+      submitData();
+    });
+
+    function submitData() {
+      const getNumberValue = (id) => document.getElementById(id).value.trim() || 0;
+      const getStringValue = (id) => document.getElementById(id).value.trim() || '';
+
+      const data = {
+        date: dateInput.value,
+        chicksCount: getNumberValue('currentStock'), 
+        feedQty: getNumberValue('feedQty'),
+        feedRate: getNumberValue('feedRate'), 
+        workers: getStringValue('workers'), 
+        medicine: getStringValue('medicine'), 
+        deadBirds: getNumberValue('deadBirds'),
+        rate: getNumberValue('rate'),
+        soldKg: getNumberValue('soldKg'),
+        soldCount: getNumberValue('soldCount'),
+        remainingBirds: remainingBirdsOutput.value.replace('त्रुटि (नकारात्मक)', '').trim() || 0,
+        totalRevenue: totalRevenueOutput.value || 0, 
+        totalExpense: totalExpenseOutput.value || 0, 
+        netProfitLoss: netProfitLossOutput.value || 0, 
+        otherExpense: getNumberValue('otherExpense'),
+        details: getStringValue('details')
+      };
+      
+      google.script.run
+        .withSuccessHandler(result => {
+            loading.style.display = 'none';
+            if (result && result.status === 'success') {
+              successCheck.style.display = 'flex'; 
+              resetForm(); 
+              setTimeout(() => {
+                successCheck.style.display = 'none';
+                submitBtn.disabled = false;
+              }, 1800);
+            } else {
+              alert('त्रुटि: डाटा बचत गर्न सकिएन। ' + (result ? result.message : 'अज्ञात त्रुटि।'));
+              submitBtn.disabled = false;
+            }
+        })
+        .withFailureHandler(err => {
+          loading.style.display = 'none';
+          alert('सञ्जाल त्रुटि वा कोड त्रुटि: ' + (err.message || err));
+          submitBtn.disabled = false;
+        })
+        .processPoultryForm(data); 
+    }
+
+    function resetForm() {
+      document.querySelectorAll('input[type=text], input[type=number]').forEach(el => {
+          if (el.id !== 'currentStock') { 
+              el.value = '';
+          }
+      });
+      
+      const today = new Date();
+      const todayString = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+      
+      dateInput.value = todayString;
+      dateDisplay.textContent = formatDate(todayString);
+      
+      profitLossWrapper.classList.remove('profit', 'loss'); 
+      const icon = profitLossWrapper.querySelector('i');
+      icon.classList.add('money-icon');
+      icon.classList.remove('expense-icon');
+      
+      getInitialStock(); 
+    }
+
+    window.onload = () => {
+      resetForm();
+    };
+  </script>
+</body>
+</html>
